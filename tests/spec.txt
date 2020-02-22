@@ -1,0 +1,8 @@
+// comments
+White space
+Identifiers Must start with an alphabetic character (or underscore); may be followed by any number of alphanumeric characters (or underscores)
+String literals "Only the character escapes \b, \f, \t, \r, \n, \', \", \\ need to be supported"
+Integer literals in base ten only
+Reserved words true, false, boolean, int, void, if, else, while, break, return
+Operators +, -, *, /, %, <, >, <=, >=, =, ==, !=, !, &&, ||
+Other things parentheses (), braces {}, semicolon ;, comma ,

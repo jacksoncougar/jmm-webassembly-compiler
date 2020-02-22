@@ -1,0 +1,13 @@
+puts("this is a literla string");
+"\t\ttabs please"
+"baby\"don't\"quote\"me"
+int i = "this should\nspan\nsome\rlines"
+"two""strings'boid'"
+""
+
+"Only the character escapes \b, \f, \t, \r, \n, \', \", \\ need to be supported"
+""""""
+"\\""\"\""
+"\k\l\j" // bad escapes
+
+"but""whaits, there's more"\"\""\"\"""\"
