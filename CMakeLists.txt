@@ -22,6 +22,8 @@ add_executable(scanner
 
 target_compile_options(scanner PRIVATE -Wall -Wextra -pedantic -Werror)
 
+include_directories(parser)
+
 file(GLOB_RECURSE TEST_FILES tests/*.t*)
 set(VAR 0)
 add_custom_target(ALLTEST)
