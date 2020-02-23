@@ -7,13 +7,13 @@
 
 namespace yy
 {
-class Driver
-{
-public:
-    class std::unique_ptr<Lexer> lexer;
+    class Driver
+    {
+    public:
+        class std::unique_ptr<Lexer> lexer;
 
-    void parse_stream(std::istream stream);
-};
+        void parse_stream(std::istream stream);
+    };
 } // namespace yy
 
 #endif

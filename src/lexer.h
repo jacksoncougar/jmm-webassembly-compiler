@@ -18,21 +18,21 @@
 
 namespace yy
 {
-class Lexer : public yyFlexLexer
-{
-public:
-    /**
-     * Returns the attributes associated with the token returned by a previous 
-     * call to yylex()
-     */
-    TokenAttributes attributes()
+    class Lexer : public yyFlexLexer
     {
-        return {lineno(), std::string(YYText(), YYLeng())};
-    }
+    public:
+        /**
+         * Returns the attributes associated with the token returned by a previous 
+         * call to yylex()
+         */
+        TokenAttributes attributes()
+        {
+            return {lineno(), std::string(YYText(), YYLeng())};
+        }
 
-    virtual yy::Parser::token_type lex(
-        yy::Parser::semantic_type *yylval);
-};
+        virtual yy::Parser::token_type lex(
+            yy::Parser::semantic_type *yylval);
+    };
 } // namespace yy
 
 #endif
