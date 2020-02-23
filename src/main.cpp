@@ -10,24 +10,8 @@
 #include <memory>
 
 #include "tokens.h"
+#include "parser.hpp"
 
-#if !defined(yyFlexLexerOnce)
-// apparently this fixes a specific problem with flex++
-#include <FlexLexer.h>
-#endif
-
-class Lexer : public yyFlexLexer
-{
-public:
-    /**
-     * Returns the attributes associated with the token returned by a previous 
-     * call to yylex()
-     */
-    TokenAttributes attributes()
-    {
-        return {lineno(), std::string(YYText(), YYLeng())};
-    }
-};
 
 int main(int argc, char **argv)
 {
@@ -46,19 +30,6 @@ int main(int argc, char **argv)
         if (!ifs.is_open())
         {
             throw "Could not open input file '" + std::string(argv[1]) + "'";
-        }
-
-        std::unique_ptr<Lexer> lexer = std::make_unique<Lexer>();
-
-        lexer->yyrestart(ifs); // set lexer to read from input file.
-
-        int token;
-        while ((token = lexer->yylex()) != 0)
-        {
-            auto attributes = lexer->attributes();
-
-            std::cout << "(" << tokenToString(token) << ", "
-                      << attributes << ")\n";
         }
     }
     catch (const char *e)

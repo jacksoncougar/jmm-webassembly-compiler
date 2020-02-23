@@ -1,0 +1,196 @@
+/* calculator with AST */
+%language "c++"
+
+%define "parser_class_name" "Parser"
+%parse-param { class Driver& driver }
+
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include "declarations.h"
+#include "driver.h"
+#include "lexer.h"
+
+#undef yylex
+#define yylex driver.lexer->lex
+
+%}
+
+%union {
+  struct ast *a;
+  double d;
+}
+/* declare tokens */
+
+%token <d> ID
+%token <d> NUMBER
+%token <d> STRING
+%token <d> TRUE
+%token <d> FALSE
+%token <d> BOOLEAN
+%token <d> BREAK
+%token <d> INT
+%token <d> AND
+%token <d> OR
+%token <d> GT
+%token <d> GE
+%token <d> LT
+%token <d> LE
+%token <d> NE
+%token <d> EQ
+%token <d> IF
+%token <d> ELSE
+%token <d> WHILE
+%token <d> VOID
+%token <d> RETURN
+%token EOL
+
+%%
+
+start   : /* nothign */
+        | globaldeclarations
+        ;
+
+literal : NUMBER
+        | STRING
+        | TRUE
+        | FALSE
+
+type    : BOOLEAN
+        | INT
+        ;
+
+globaldeclarations      : globaldeclaration
+                        | globaldeclarations globaldeclaration
+
+globaldeclaration       : variabledeclaration
+                        | functiondeclaration
+                        | mainfunctiondeclaration
+                        ;
+
+variabledeclaration     : type identifier ';'
+                        ;
+
+identifier              : ID
+                        ;
+
+functiondeclaration     : functionheader block
+                        ;
+
+functionheader          : type functiondeclarator
+                        | VOID functiondeclarator
+                        ;
+
+functiondeclarator      : identifier '(' formalparameterlist ')'
+                        | identifier '(' ')'
+                        ;
+
+formalparameterlist     : formalparameter
+                        | formalparameterlist ',' formalparameter
+                        ;
+
+formalparameter         : type identifier
+                        ;
+
+mainfunctiondeclaration : mainfunctiondeclarator block
+                        ;
+
+mainfunctiondeclarator  : identifier '(' ')'
+                        ;
+
+block                   : '{' blockstatements '}'
+                        | '{' '}'
+                        ;
+
+blockstatements         : blockstatement
+                        | blockstatements blockstatement
+                        ;
+
+blockstatement          : variabledeclaration
+                        | statement
+                        ;
+
+statement               : block
+                        | ';'
+                        | statementexpression ';'
+                        | BREAK ';'
+                        | RETURN expression ';'
+                        | RETURN ';'
+                        | IF '(' expression ')' statement
+                        | IF '(' expression ')' statement ELSE statement
+                        | WHILE '(' expression ')' statement
+                        ;
+
+statementexpression     : assignment
+                        | functioninvocation
+                        ;
+
+primary                 : literal
+                        | '(' expression ')'
+                        | functioninvocation
+                        ;
+
+argumentlist            : expression
+                        | argumentlist ',' expression
+                        ;
+
+functioninvocation      : identifier '(' argumentlist ')'
+                        | identifier '(' ')'
+                        ;
+
+postfixexpression       : primary
+                        | identifier
+                        ;
+
+unaryexpression         : '-' unaryexpression
+                        | '!' unaryexpression
+                        | postfixexpression
+                        ;
+
+multiplicativeexpression: unaryexpression
+                        | multiplicativeexpression '*' unaryexpression
+                        | multiplicativeexpression '/' unaryexpression
+                        | multiplicativeexpression '%' unaryexpression
+                        ;
+
+additiveexpression      : multiplicativeexpression
+                        | additiveexpression '+' multiplicativeexpression
+                        | additiveexpression '-' multiplicativeexpression
+                        ;
+
+relationalexpression    : additiveexpression
+                        | relationalexpression '<' additiveexpression
+                        | relationalexpression '>' additiveexpression
+                        | relationalexpression LE additiveexpression
+                        | relationalexpression GE additiveexpression
+                        ;
+
+equalityexpression      : relationalexpression
+                        | equalityexpression EQ relationalexpression
+                        | equalityexpression NE relationalexpression
+                        ;
+
+conditionalandexpression: equalityexpression
+                        | conditionalandexpression AND equalityexpression
+                        ;
+
+conditionalorexpression : conditionalandexpression
+                        | conditionalorexpression OR conditionalandexpression
+                        ;
+
+assignmentexpression    : conditionalorexpression
+                        | assignment
+                        ;
+
+assignment              : identifier '=' assignmentexpression
+                        ;
+
+expression              : assignmentexpression
+                        ;
+
+%%
+
+void yy::Parser::error(const std::string& m)
+{
+        // okay
+}
