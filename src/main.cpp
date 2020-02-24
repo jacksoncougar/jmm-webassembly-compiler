@@ -10,6 +10,7 @@
 #include <memory>
 
 #include "tokens.h"
+#include "driver.h"
 #include "parser.hpp"
 
 
@@ -31,6 +32,9 @@ int main(int argc, char **argv)
         {
             throw "Could not open input file '" + std::string(argv[1]) + "'";
         }
+
+        yy::Driver driver;
+        driver.parse_stream(ifs);
     }
     catch (const char *e)
     {

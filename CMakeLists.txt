@@ -32,6 +32,7 @@ add_executable(parser
     ${FLEX_Lex_OUTPUTS}
     ${BISON_Parser_OUTPUTS}
     src/main.cpp 
+    src/driver.cpp 
     src/declarations.h 
     src/tokens.h 
     src/tokens.cpp

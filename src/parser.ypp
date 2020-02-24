@@ -1,20 +1,31 @@
 /* calculator with AST */
 %language "c++"
 
+/* write out a header file containing the token defines */
+%defines
+
+/* use newer C++ skeleton file */
+%skeleton "lalr1.cc"
+
 %define "parser_class_name" "Parser"
 %parse-param { class Driver& driver }
 
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
+#include "lexer.h"
 #include "declarations.h"
 #include "driver.h"
-#include "lexer.h"
 
 #undef yylex
 #define yylex driver.lexer->lex
 
+
+
 %}
+
+%error-verbose
 
 %union {
   struct ast *a;
@@ -22,28 +33,49 @@
 }
 /* declare tokens */
 
+%token END 0
+
 %token <d> ID
+
 %token <d> NUMBER
-%token <d> STRING
+%token <d> STRING_LITERAL
 %token <d> TRUE
 %token <d> FALSE
 %token <d> BOOLEAN
-%token <d> BREAK
 %token <d> INT
+%token <d> DECIMAL
+
 %token <d> AND
 %token <d> OR
-%token <d> GT
-%token <d> GE
-%token <d> LT
-%token <d> LE
-%token <d> NE
-%token <d> EQ
+
 %token <d> IF
 %token <d> ELSE
 %token <d> WHILE
 %token <d> VOID
 %token <d> RETURN
-%token EOL
+%token <d> BREAK
+
+%token <d> PLUS
+%token <d> MINUS
+%token <d> MULTIPLY
+%token <d> DIVIDE
+%token <d> MODULO
+%token <d> ASSIGNMENT
+%token <d> NOT
+%token <d> LT
+%token <d> GT
+%token <d> GE
+%token <d> LE
+%token <d> EQ
+%token <d> NE
+
+%token <d> PARENTHESIS_OPEN
+%token <d> PARENTHESIS_CLOSE
+%token <d> BRACE_OPEN
+%token <d> BRACE_CLOSE
+%token <d> SEMICOLON
+%token <d> COMMA
+
 
 %%
 
@@ -52,7 +84,7 @@ start   : /* nothign */
         ;
 
 literal : NUMBER
-        | STRING
+        | STRING_LITERAL
         | TRUE
         | FALSE
 
@@ -62,52 +94,67 @@ type    : BOOLEAN
 
 globaldeclarations      : globaldeclaration
                         | globaldeclarations globaldeclaration
+                        { std::cout << "globaldeclarations\n"; }
+                        ;
 
 globaldeclaration       : variabledeclaration
                         | functiondeclaration
                         | mainfunctiondeclaration
+                        { std::cout << "globaldeclaration\n"; }
                         ;
 
-variabledeclaration     : type identifier ';'
+variabledeclaration     : type identifier SEMICOLON 
+                        { std::cout << "variabledeclaration\n"; }
                         ;
 
-identifier              : ID
+identifier              : ID 
+                        { std::cout << "identifier\n"; }
                         ;
 
 functiondeclaration     : functionheader block
+                        { std::cout << "functiondeclaration\n"; }
                         ;
 
 functionheader          : type functiondeclarator
                         | VOID functiondeclarator
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 functiondeclarator      : identifier '(' formalparameterlist ')'
                         | identifier '(' ')'
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 formalparameterlist     : formalparameter
                         | formalparameterlist ',' formalparameter
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 formalparameter         : type identifier
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 mainfunctiondeclaration : mainfunctiondeclarator block
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 mainfunctiondeclarator  : identifier '(' ')'
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 block                   : '{' blockstatements '}'
                         | '{' '}'
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 blockstatements         : blockstatement
                         | blockstatements blockstatement
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 blockstatement          : variabledeclaration
                         | statement
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 statement               : block
@@ -119,43 +166,52 @@ statement               : block
                         | IF '(' expression ')' statement
                         | IF '(' expression ')' statement ELSE statement
                         | WHILE '(' expression ')' statement
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 statementexpression     : assignment
                         | functioninvocation
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 primary                 : literal
                         | '(' expression ')'
                         | functioninvocation
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 argumentlist            : expression
                         | argumentlist ',' expression
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 functioninvocation      : identifier '(' argumentlist ')'
                         | identifier '(' ')'
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 postfixexpression       : primary
                         | identifier
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 unaryexpression         : '-' unaryexpression
                         | '!' unaryexpression
                         | postfixexpression
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 multiplicativeexpression: unaryexpression
                         | multiplicativeexpression '*' unaryexpression
                         | multiplicativeexpression '/' unaryexpression
                         | multiplicativeexpression '%' unaryexpression
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 additiveexpression      : multiplicativeexpression
                         | additiveexpression '+' multiplicativeexpression
                         | additiveexpression '-' multiplicativeexpression
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 relationalexpression    : additiveexpression
@@ -163,34 +219,42 @@ relationalexpression    : additiveexpression
                         | relationalexpression '>' additiveexpression
                         | relationalexpression LE additiveexpression
                         | relationalexpression GE additiveexpression
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 equalityexpression      : relationalexpression
                         | equalityexpression EQ relationalexpression
                         | equalityexpression NE relationalexpression
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 conditionalandexpression: equalityexpression
                         | conditionalandexpression AND equalityexpression
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 conditionalorexpression : conditionalandexpression
                         | conditionalorexpression OR conditionalandexpression
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 assignmentexpression    : conditionalorexpression
                         | assignment
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 assignment              : identifier '=' assignmentexpression
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 expression              : assignmentexpression
+                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 %%
 
 void yy::Parser::error(const std::string& m)
 {
+        std::cerr << m << "\n";
         // okay
 }

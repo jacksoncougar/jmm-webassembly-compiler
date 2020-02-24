@@ -1,4 +1,1 @@
-howdy() {
-        prints("Hello, world!\n");
-        int x = 000;
-}
+int free;

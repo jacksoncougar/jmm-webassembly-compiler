@@ -1,19 +1,19 @@
 #ifndef LEXER_H
 #define LEXER_H
 
+#ifndef yyFlexLexerOnce
+// apparently this fixes a specific problem with flex++
+#include "FlexLexer.h"
+#endif
+
+#include "parser.hpp"
+#include "tokens.h"
+
 #ifndef YY_DECL
 
 #define YY_DECL            \
     yy::Parser::token_type yy::Lexer::lex( \
-        yy::Parser::semantic_type *yylval);
-#endif
-
-#include "tokens.h"
-#include "parser.hpp"
-
-#ifndef yyFlexLexerOnce
-// apparently this fixes a specific problem with flex++
-#include "FlexLexer.h"
+        yy::Parser::semantic_type *yylval)
 #endif
 
 namespace yy
@@ -30,9 +30,10 @@ namespace yy
             return {lineno(), std::string(YYText(), YYLeng())};
         }
 
-        virtual yy::Parser::token_type lex(
+        yy::Parser::token_type lex(
             yy::Parser::semantic_type *yylval);
     };
 } // namespace yy
+
 
 #endif

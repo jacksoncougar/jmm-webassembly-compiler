@@ -12,7 +12,7 @@ namespace yy
     public:
         class std::unique_ptr<Lexer> lexer;
 
-        void parse_stream(std::istream stream);
+        void parse_stream(std::istream& stream);
     };
 } // namespace yy
 

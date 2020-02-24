@@ -8,10 +8,18 @@
 #include <string>
 #include <fstream>
 
+#include "lexer.h"
 #include "tokens.h"
+#include "parser.hpp"
 
 int yylineno = 1;
 int warningno = 0;
+
+typedef yy::Parser::token token;
+typedef yy::Parser::token_type token_type;
+
+#define yyterminate() return token::END
+#undef YY_INTERACTIVE
 
 %}
 
@@ -52,70 +60,73 @@ StringCharacter         ([^\r\n"\\]|{EscapeSequence})
 
 %%
  // Keywords go at the top
-"int" { return T_TYPE_INT; }
-"boolean" { return T_TYPE_BOOLEAN; }
+"int" { return token::INT; }
+"boolean" { return token::BOOLEAN; }
 
-"if" { return T_KEYWORD_IF; }
-"else" { return T_KEYWORD_ELSE; }
-"while" { return T_KEYWORD_WHILE; }
-"break" { return T_KEYWORD_BREAK; }
-"return" { return T_KEYWORD_RETURN; }
-"void" { return T_KEYWORD_VOID; }
+"if" { return token::IF; }
+"else" { return token::ELSE; }
+"while" { return token::WHILE; }
+"break" { return token::BREAK; }
+"return" { return token::RETURN; }
+"void" { return token::VOID; }
 
-["]  { BEGIN (STRING); yymore(); }
+["]  { BEGIN STRING; yymore(); }
 <STRING>{StringCharacter}*  { yymore(); }
 
  /* strings cannot span across lines */
 <STRING>{LineTerminator}  { 
     error("String literal missing closing quotation at or near line ", 
     yylineno);
-    return 0; 
+    return token::END;
 }
 
  /* catch the case when we reach the end-of-file without closing a string */
 <STRING><<EOF>> { 
     error("String literal missing closing quotation at or near line ", 
     yylineno);
-    return 0; 
+    return token::END;
 }
-<STRING>["] { BEGIN (INITIAL); return T_LITERAL_STRING; }
-<STRING>\\. { BEGIN (ESCAPE); yyless(1); /* ignore opening quotation */ }
+<STRING>["] { BEGIN INITIAL; return token::STRING_LITERAL; }
+<STRING>\\. { BEGIN ESCAPE; yyless(1); /* ignore opening quotation */ }
 
  /* scan until the end-of-string to see if there are more unknown escapes, then 
   * die */
-<ESCAPE>\\. {  error("unknown escape sequence in string: '", yytext, "' at line ", yylineno); }
-<ESCAPE>["] { return 0; }
+<ESCAPE>\\. {  error("unknown escape sequence in string: '", yytext, "' at line ", yylineno); return token::END; }
+<ESCAPE>["] { return token::END; }
 <ESCAPE>.   /* do nothing */
 
 
-"+" { return T_OP_PLUS; }
-"-" { return T_OP_MINUS; }
-"*" { return T_OP_MULTIPLY; }
-"/" { return T_OP_DIVIDE; }
-"%" { return T_OP_MODULO; }
-"=" { return T_OP_ASSIGNMENT; }
-"!" { return T_OP_NOT; }
-"<" { return T_OP_LT; }
-">" { return T_OP_GT; }
-">=" { return T_OP_GE; }
-"<=" { return T_OP_LE; }
-"==" { return T_OP_EQ; }
-"!=" { return T_OP_NE; }
-"&&" { return T_OP_AND; }
-"||" { return T_OP_OR; }
+"+" { return token::PLUS; }
+"-" { return token::MINUS; }
+"*" { return token::MULTIPLY; }
+"/" { return token::DIVIDE; }
+"%" { return token::MODULO; }
+"=" { return token::ASSIGNMENT; }
+"!" { return token::NOT; }
+"<" { return token::LT; }
+">" { return token::GT; }
+">=" { return token::GE; }
+"<=" { return token::LE; }
+"==" { return token::EQ; }
+"!=" { return token::NE; }
+"&&" { return token::AND; }
+"||" { return token::OR; }
 
-"("     { return T_PARENTHESIS_OPEN; }
-")"     { return T_PARENTHESIS_CLOSE; }
-"{"     { return T_BRACE_OPEN; }
-"}"     { return T_BRACE_CLOSE; }
-";"     { return T_SEMICOLON; }
-","     { return T_COMMA; }
+"("     { return token::PARENTHESIS_OPEN; }
+")"     { return token::PARENTHESIS_CLOSE; }
+"{"     { return token::BRACE_OPEN; }
+"}"     { return token::BRACE_CLOSE; }
+";"     { return token::SEMICOLON; }
+","     { return token::COMMA; }
 
 [/][/].*             /* do nothing */
-{BooleanLiteral}    { return T_LITERAL_BOOLEAN; }
-{OctalLikeNumeral}  { warning("treating octal-like number as decimal numeral."); return T_LITERAL_DECIMAL;}
-{DecimalNumeral}    { return T_LITERAL_DECIMAL; }
-{Identifier}        { return T_ID; }
+{BooleanLiteral}    { return token::BOOLEAN; }
+{OctalLikeNumeral}  { 
+        warning("treating octal-like number as decimal numeral."); 
+        return token::DECIMAL;
+                    }
+{DecimalNumeral}    { return token::DECIMAL; }
+{Identifier}        { return token::ID; }
 {Whitespace}        /* do nothing */
 
  /* catch-all here at the bottom; count up to 10 warnings then error and stop. */
@@ -124,10 +135,15 @@ StringCharacter         ([^\r\n"\\]|{EscapeSequence})
                             warning("ignoring unknown token '", yytext,"' at line ", yylineno);
                         }
                         else { 
-                            error("too many warnings at or near line ", yylineno); return 0;
+                            error("too many warnings at or near line ", yylineno); 
+                            return token::END;
                         }  
                     }
 
-<<EOF>> { return 0; }
+<<EOF>>             { return token::END; }
 %%
 
+#ifdef yylex
+#undef yylex
+#endif
+int yyFlexLexer::yylex() { return 0; }
