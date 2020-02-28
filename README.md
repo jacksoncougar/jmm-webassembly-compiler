@@ -7,7 +7,7 @@ Jackson Cougar Wiebe 30062138
 
 ## Usage
 
-    ./scanner <FILE_TO_SCAN>
+    ./parser <FILE_TO_SCAN>
 
 ## Tests
 

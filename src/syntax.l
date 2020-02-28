@@ -136,6 +136,7 @@ yylloc->step();
 ","     { return token::COMMA; }
 
 [/][/].*             /* do nothing */
+
 true    {  
     yylval->a = new ASTNode<ASTNodeAttribute<std::string>>(
         "true",{}, {"value", yytext}
@@ -183,7 +184,7 @@ false    {
     ASTNodeAttribute<int>>(
         "id", {}, {"name", yytext}, {"lineno", yylineno}
         );
-    return token::ID; }1
+    return token::ID; }
 
 [ \t\f]+      {
     yylloc->step();

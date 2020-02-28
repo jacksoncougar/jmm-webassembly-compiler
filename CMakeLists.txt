@@ -20,23 +20,30 @@ flex_target(
 bison_target(
     Parser 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/parser.ypp 
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/parser.cpp
-    DEFINES_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/parser.hpp
+    ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp
+    DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser.hpp
 )
 
-include_directories(${FLEX_Lex_INCLUDES})
-include_directories(${BISON_Parser_INCLUDES})
+add_library(bison_flex STATIC
+${FLEX_Lex_OUTPUTS}
+${BISON_Parser_OUTPUTS}
+)
+
+target_include_directories(bison_flex PUBLIC build/)
+
+message(STATUS "HI ${BISON_Parser_OUTPUTS}")
+
 
 
 add_executable(parser 
-    ${FLEX_Lex_OUTPUTS}
-    ${BISON_Parser_OUTPUTS}
     src/main.cpp 
     src/driver.cpp 
     src/declarations.hpp 
     src/tokens.h src/tokens.cpp
     src/ast.cpp src/ast.hpp
 )
+
+target_link_libraries(parser bison_flex)
 
 target_compile_options(parser PRIVATE -Wall)
 

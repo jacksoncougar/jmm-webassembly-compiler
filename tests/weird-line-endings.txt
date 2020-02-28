@@ -1,3 +1,0 @@
-howdy() {    prints("Hello, world!\n");    int x = 000;}0023
-
-fdjklfd;

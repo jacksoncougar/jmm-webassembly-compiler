@@ -124,11 +124,13 @@ int yydebug = 1;
 %type <a> expression
 %type <a> literal
 %type <a> type
+%type <a> start
 
 %%
 
-start   : /* nothign */
-        | globaldeclarations { std::cout << *$1; } // print out AST
+start   : /* nothing */ { $$ = new ASTNode("code"); }
+        | globaldeclarations { $$ = new ASTNode("code", {$1}); 
+                               std::cout << *$$; } // print out AST
         ;
 
 literal : NUMBER
@@ -140,7 +142,7 @@ type    : BOOLEAN
         | INT
         ;
 
-globaldeclarations      : globaldeclaration { $$ = new ASTNode("globaldeclaration", {$1}); }
+globaldeclarations      : globaldeclaration { $$ = new ASTNode("global declarations", {$1}); }
                         | globaldeclarations globaldeclaration { $$->add($2); }
                         ;
 
@@ -150,47 +152,43 @@ globaldeclaration       : variabledeclaration
                         
                         ;
 
-variabledeclaration     : type identifier SEMICOLON { $$ = new ASTNode("variabledeclaration", {$1, $2}); }
+variabledeclaration     : type identifier SEMICOLON { $$ = new ASTNode("variable declaration", {$1, $2}); }
                         ;
 
 identifier              : ID 
                         ;
 
 functiondeclaration     : functionheader block 
-                        { $$ = new ASTNode("function_decl", {$1, $2}); }
+                        { $$ = new ASTNode("function declaration", {$1, $2}); }
                         ;
 
-functionheader          : type functiondeclarator 
-                        { $$ = new ASTNode("function_header", {$1, $2}); }
+functionheader          : type functiondeclarator { $$ = new ASTNode("function header", {$1, $2}); }
 
-                        | VOID functiondeclarator       
-                        { $$ = new ASTNode("function_header", {$1, $2}); }
+                        | VOID functiondeclarator { $$ = new ASTNode("function header", {$1, $2}); }
                         ;
 
-functiondeclarator      : identifier PARENTHESIS_OPEN formalparameterlist PARENTHESIS_CLOSE { $$ = new ASTNode("functiondeclarator", {$1, $3}); }
-                        | identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE { $$ = new ASTNode("functiondeclarator", {$1}); }
+functiondeclarator      : identifier PARENTHESIS_OPEN formalparameterlist PARENTHESIS_CLOSE { $$ = new ASTNode("function declarator", {$1, $3}); }
+                        | identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE { $$ = new ASTNode("function declarator", {$1}); }
                         ;
 
-formalparameterlist     : formalparameter  { $$ = new ASTNode("formalparameterlist", {$1}); }
+formalparameterlist     : formalparameter  { $$ = new ASTNode("formal parameter list", {$1}); }
                         | formalparameterlist COMMA formalparameter { $$->add($3); }
                         ;
 
-formalparameter         : type identifier  { $$ = new ASTNode("formalparameter", {$1, $2}); }
+formalparameter         : type identifier  { $$ = new ASTNode("formal parameter", {$1, $2}); }
                         ;
 
-mainfunctiondeclaration : mainfunctiondeclarator block
-                        { $$ = new ASTNode("mainfunctiondeclaration", {$1, $2}); }
+mainfunctiondeclaration : mainfunctiondeclarator block { $$ = new ASTNode("main function declaration", {$1, $2}); }
                         ;
 
-mainfunctiondeclarator  : identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE { $$ = $1; }
+mainfunctiondeclarator  : identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE
                         ;
 
 block                   : BRACE_OPEN blockstatements BRACE_CLOSE { $$ = new ASTNode("block", {$2}); }
                         | BRACE_OPEN BRACE_CLOSE { $$ = new ASTNode("block"); }
                         ;
 
-blockstatements         : blockstatement
-                        { $$ = new ASTNode("blockstatements", {$1}); }
+blockstatements         : blockstatement { $$ = new ASTNode("block statements", {$1}); }
                         | blockstatements blockstatement { $$->add($2); }
                         ;
 
@@ -199,18 +197,18 @@ blockstatement          : variabledeclaration
                         ;
 
 statement               : block
-                        | SEMICOLON { $$ = new ASTNode("nullstatement"); }
+                        | SEMICOLON { $$ = new ASTNode("empty statement"); }
                         | statementexpression SEMICOLON { $$ = $1; }
                         | BREAK SEMICOLON
-                        | RETURN expression SEMICOLON { $$ = new ASTNode("return", {$2}); }
+                        | RETURN expression SEMICOLON { $1->add($2); $$ = $1; /* forward the return node */ }
                         | RETURN SEMICOLON
                         | IF PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement { $$ = new ASTNode("if", {$3,$5}); }
-                        | IF PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement ELSE statement { $$ = new ASTNode("ifelse", {$3,$5,$7}); }
+                        | IF PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement ELSE statement { $$ = new ASTNode("if else", {$3,$5,$7}); }
                         | WHILE PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement { $$ = new ASTNode("while", {$3,$5}); }
                         ;
 
-statementexpression     : assignment { $$ = new ASTNode("statementexpression", {$1}); }
-                        | functioninvocation { $$ = new ASTNode("retstatementexpressionurn", {$1}); }
+statementexpression     : assignment { $$ = new ASTNode("statement expression", {$1}); }
+                        | functioninvocation { $$ = new ASTNode("statement expression", {$1}); }
                         ;
 
 primary                 : literal
@@ -218,12 +216,12 @@ primary                 : literal
                         | functioninvocation
                         ;
 
-argumentlist            : expression { $$ = new ASTNode("argumentlist", {$1}); }
+argumentlist            : expression { $$ = new ASTNode("argument list", {$1}); }
                         | argumentlist COMMA expression { $$->add($3); }
                         ;
 
-functioninvocation      : identifier PARENTHESIS_OPEN argumentlist PARENTHESIS_CLOSE { $$ = new ASTNode("functioninvocation", {$1,$3}); }
-                        | identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE { $$ = new ASTNode("functioninvocation", {$1}); }
+functioninvocation      : identifier PARENTHESIS_OPEN argumentlist PARENTHESIS_CLOSE { $$ = new ASTNode("function invocation", {$1,$3}); }
+                        | identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE { $$ = new ASTNode("function invocation", {$1}); }
                         ;
 
 postfixexpression       : primary
@@ -280,5 +278,5 @@ expression              : assignmentexpression
 
 void yy::Parser::error(const location_type& l, const std::string& m)
 {
-        driver.error(l, m);
+    driver.error(l, m);
 }

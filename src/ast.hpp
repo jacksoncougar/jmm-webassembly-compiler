@@ -77,13 +77,13 @@ public:
         // print the attributes, if there are any.
         if (std::tuple_size<decltype(attributes)>::value > 0)
         {
-            out << " attributes: {";
+            out << " (attributes (";
             std::apply([&out](auto &&... values) {
                 auto n = 0;
                 ((out << values << (++n != sizeof...(As) ? ", " : "")), ...);
             },
                        attributes);
-            out << "}";
+            out << "))";
         }
         out << ")\n";
         tab++;
