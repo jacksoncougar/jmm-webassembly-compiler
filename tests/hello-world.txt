@@ -1,1 +1,6 @@
-int free;
+main() {
+    int willy;
+    willy = 021;
+
+    s = "something";
+} 

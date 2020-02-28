@@ -1,3 +1,9 @@
+%{        
+int yydebug = 1;
+%}
+
+%define parse.trace
+
 /* calculator with AST */
 %language "c++"
 
@@ -6,81 +12,123 @@
 
 /* use newer C++ skeleton file */
 %skeleton "lalr1.cc"
-
-%define "parser_class_name" "Parser"
+%define "parser_class_name" {Parser}
 %parse-param { class Driver& driver }
 
-%{
+%code requires{
+#include "ast.hpp"
+}
+
+
+%code top {
+        
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
 #include "lexer.h"
-#include "declarations.h"
+#include "declarations.hpp"
 #include "driver.h"
-
 #undef yylex
 #define yylex driver.lexer->lex
 
+}
 
 
-%}
-
+%start start
 %error-verbose
 
+%locations 
+%initial-action
+{
+    @$.begin.filename = @$.end.filename = &driver.streamname;
+};
+
 %union {
-  struct ast *a;
-  double d;
+        ASTNodeBase *a;
 }
 /* declare tokens */
 
 %token END 0
 
-%token <d> ID
+%token <a> ID
+%token <a> NUMBER
+%token <a> STRING_LITERAL
+%token <a> TRUE
+%token <a> FALSE
+%token <a> BOOLEAN
+%token <a> INT
 
-%token <d> NUMBER
-%token <d> STRING_LITERAL
-%token <d> TRUE
-%token <d> FALSE
-%token <d> BOOLEAN
-%token <d> INT
-%token <d> DECIMAL
+%left <a> PLUS
+%left <a> MINUS
+%left <a> MULTIPLY
+%left <a> DIVIDE
+%left <a> MODULO
 
-%token <d> AND
-%token <d> OR
+%left <a> AND
+%left <a> OR
 
-%token <d> IF
-%token <d> ELSE
-%token <d> WHILE
-%token <d> VOID
-%token <d> RETURN
-%token <d> BREAK
+%token <a> IF
+%token <a> ELSE
+%token <a> WHILE
+%token <a> VOID
+%token <a> RETURN
+%token <a> BREAK
 
-%token <d> PLUS
-%token <d> MINUS
-%token <d> MULTIPLY
-%token <d> DIVIDE
-%token <d> MODULO
-%token <d> ASSIGNMENT
-%token <d> NOT
-%token <d> LT
-%token <d> GT
-%token <d> GE
-%token <d> LE
-%token <d> EQ
-%token <d> NE
+%right <a> ASSIGNMENT
+%right <a> NOT
+%token <a> LT
+%token <a> GT
+%token <a> GE
+%token <a> LE
+%token <a> EQ
+%token <a> NE
 
-%token <d> PARENTHESIS_OPEN
-%token <d> PARENTHESIS_CLOSE
-%token <d> BRACE_OPEN
-%token <d> BRACE_CLOSE
-%token <d> SEMICOLON
-%token <d> COMMA
+%expect 1
 
+%token <a> PARENTHESIS_OPEN
+%token <a> PARENTHESIS_CLOSE
+%token <a> BRACE_OPEN
+%token <a> BRACE_CLOSE
+%token <a> SEMICOLON
+%token <a> COMMA
+
+%type <a> globaldeclarations
+%type <a> globaldeclaration
+%type <a> variabledeclaration
+%type <a> identifier
+%type <a> functiondeclaration
+%type <a> functionheader
+%type <a> functiondeclarator
+%type <a> formalparameterlist
+%type <a> formalparameter
+%type <a> mainfunctiondeclaration
+%type <a> mainfunctiondeclarator
+%type <a> block
+%type <a> blockstatements
+%type <a> blockstatement
+%type <a> statement
+%type <a> statementexpression
+%type <a> primary
+%type <a> argumentlist
+%type <a> functioninvocation
+%type <a> postfixexpression
+%type <a> unaryexpression
+%type <a> multiplicativeexpression
+%type <a> additiveexpression
+%type <a> relationalexpression
+%type <a> equalityexpression
+%type <a> conditionalandexpression
+%type <a> conditionalorexpression
+%type <a> assignmentexpression
+%type <a> assignment
+%type <a> expression
+%type <a> literal
+%type <a> type
 
 %%
 
 start   : /* nothign */
-        | globaldeclarations
+        | globaldeclarations { std::cout << *$1; } // print out AST
         ;
 
 literal : NUMBER
@@ -92,169 +140,145 @@ type    : BOOLEAN
         | INT
         ;
 
-globaldeclarations      : globaldeclaration
-                        | globaldeclarations globaldeclaration
-                        { std::cout << "globaldeclarations\n"; }
+globaldeclarations      : globaldeclaration { $$ = new ASTNode("globaldeclaration", {$1}); }
+                        | globaldeclarations globaldeclaration { $$->add($2); }
                         ;
 
-globaldeclaration       : variabledeclaration
-                        | functiondeclaration
+globaldeclaration       : variabledeclaration 
+                        | functiondeclaration 
                         | mainfunctiondeclaration
-                        { std::cout << "globaldeclaration\n"; }
+                        
                         ;
 
-variabledeclaration     : type identifier SEMICOLON 
-                        { std::cout << "variabledeclaration\n"; }
+variabledeclaration     : type identifier SEMICOLON { $$ = new ASTNode("variabledeclaration", {$1, $2}); }
                         ;
 
 identifier              : ID 
-                        { std::cout << "identifier\n"; }
                         ;
 
-functiondeclaration     : functionheader block
-                        { std::cout << "functiondeclaration\n"; }
+functiondeclaration     : functionheader block 
+                        { $$ = new ASTNode("function_decl", {$1, $2}); }
                         ;
 
-functionheader          : type functiondeclarator
-                        | VOID functiondeclarator
-                        { std::cout << "globaldeclarations\n"; }
+functionheader          : type functiondeclarator 
+                        { $$ = new ASTNode("function_header", {$1, $2}); }
+
+                        | VOID functiondeclarator       
+                        { $$ = new ASTNode("function_header", {$1, $2}); }
                         ;
 
-functiondeclarator      : identifier '(' formalparameterlist ')'
-                        | identifier '(' ')'
-                        { std::cout << "globaldeclarations\n"; }
+functiondeclarator      : identifier PARENTHESIS_OPEN formalparameterlist PARENTHESIS_CLOSE { $$ = new ASTNode("functiondeclarator", {$1, $3}); }
+                        | identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE { $$ = new ASTNode("functiondeclarator", {$1}); }
                         ;
 
-formalparameterlist     : formalparameter
-                        | formalparameterlist ',' formalparameter
-                        { std::cout << "globaldeclarations\n"; }
+formalparameterlist     : formalparameter  { $$ = new ASTNode("formalparameterlist", {$1}); }
+                        | formalparameterlist COMMA formalparameter { $$->add($3); }
                         ;
 
-formalparameter         : type identifier
-                        { std::cout << "globaldeclarations\n"; }
+formalparameter         : type identifier  { $$ = new ASTNode("formalparameter", {$1, $2}); }
                         ;
 
 mainfunctiondeclaration : mainfunctiondeclarator block
-                        { std::cout << "globaldeclarations\n"; }
+                        { $$ = new ASTNode("mainfunctiondeclaration", {$1, $2}); }
                         ;
 
-mainfunctiondeclarator  : identifier '(' ')'
-                        { std::cout << "globaldeclarations\n"; }
+mainfunctiondeclarator  : identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE { $$ = $1; }
                         ;
 
-block                   : '{' blockstatements '}'
-                        | '{' '}'
-                        { std::cout << "globaldeclarations\n"; }
+block                   : BRACE_OPEN blockstatements BRACE_CLOSE { $$ = new ASTNode("block", {$2}); }
+                        | BRACE_OPEN BRACE_CLOSE { $$ = new ASTNode("block"); }
                         ;
 
 blockstatements         : blockstatement
-                        | blockstatements blockstatement
-                        { std::cout << "globaldeclarations\n"; }
+                        { $$ = new ASTNode("blockstatements", {$1}); }
+                        | blockstatements blockstatement { $$->add($2); }
                         ;
 
 blockstatement          : variabledeclaration
                         | statement
-                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 statement               : block
-                        | ';'
-                        | statementexpression ';'
-                        | BREAK ';'
-                        | RETURN expression ';'
-                        | RETURN ';'
-                        | IF '(' expression ')' statement
-                        | IF '(' expression ')' statement ELSE statement
-                        | WHILE '(' expression ')' statement
-                        { std::cout << "globaldeclarations\n"; }
+                        | SEMICOLON { $$ = new ASTNode("nullstatement"); }
+                        | statementexpression SEMICOLON { $$ = $1; }
+                        | BREAK SEMICOLON
+                        | RETURN expression SEMICOLON { $$ = new ASTNode("return", {$2}); }
+                        | RETURN SEMICOLON
+                        | IF PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement { $$ = new ASTNode("if", {$3,$5}); }
+                        | IF PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement ELSE statement { $$ = new ASTNode("ifelse", {$3,$5,$7}); }
+                        | WHILE PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement { $$ = new ASTNode("while", {$3,$5}); }
                         ;
 
-statementexpression     : assignment
-                        | functioninvocation
-                        { std::cout << "globaldeclarations\n"; }
+statementexpression     : assignment { $$ = new ASTNode("statementexpression", {$1}); }
+                        | functioninvocation { $$ = new ASTNode("retstatementexpressionurn", {$1}); }
                         ;
 
 primary                 : literal
-                        | '(' expression ')'
+                        | PARENTHESIS_OPEN expression PARENTHESIS_CLOSE { $$ = $2; }
                         | functioninvocation
-                        { std::cout << "globaldeclarations\n"; }
                         ;
 
-argumentlist            : expression
-                        | argumentlist ',' expression
-                        { std::cout << "globaldeclarations\n"; }
+argumentlist            : expression { $$ = new ASTNode("argumentlist", {$1}); }
+                        | argumentlist COMMA expression { $$->add($3); }
                         ;
 
-functioninvocation      : identifier '(' argumentlist ')'
-                        | identifier '(' ')'
-                        { std::cout << "globaldeclarations\n"; }
+functioninvocation      : identifier PARENTHESIS_OPEN argumentlist PARENTHESIS_CLOSE { $$ = new ASTNode("functioninvocation", {$1,$3}); }
+                        | identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE { $$ = new ASTNode("functioninvocation", {$1}); }
                         ;
 
 postfixexpression       : primary
                         | identifier
-                        { std::cout << "globaldeclarations\n"; }
                         ;
 
-unaryexpression         : '-' unaryexpression
-                        | '!' unaryexpression
+unaryexpression         : MINUS unaryexpression { $$ = new ASTNode("-", {$2}); }
+                        | NOT unaryexpression { $$ = new ASTNode("!", {$2}); }
                         | postfixexpression
-                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 multiplicativeexpression: unaryexpression
-                        | multiplicativeexpression '*' unaryexpression
-                        | multiplicativeexpression '/' unaryexpression
-                        | multiplicativeexpression '%' unaryexpression
-                        { std::cout << "globaldeclarations\n"; }
+                        | multiplicativeexpression MULTIPLY unaryexpression { $$ = new ASTNode("*", {$1,$3}); }
+                        | multiplicativeexpression DIVIDE unaryexpression { $$ = new ASTNode("/", {$1,$3}); }
+                        | multiplicativeexpression MODULO unaryexpression { $$ = new ASTNode("%", {$1,$3}); }
                         ;
 
 additiveexpression      : multiplicativeexpression
-                        | additiveexpression '+' multiplicativeexpression
-                        | additiveexpression '-' multiplicativeexpression
-                        { std::cout << "globaldeclarations\n"; }
+                        | additiveexpression PLUS multiplicativeexpression { $$ = new ASTNode("+", {$1,$3}); }
+                        | additiveexpression MINUS multiplicativeexpression { $$ = new ASTNode("-", {$1,$3}); }
                         ;
 
 relationalexpression    : additiveexpression
-                        | relationalexpression '<' additiveexpression
-                        | relationalexpression '>' additiveexpression
-                        | relationalexpression LE additiveexpression
-                        | relationalexpression GE additiveexpression
-                        { std::cout << "globaldeclarations\n"; }
+                        | relationalexpression LT additiveexpression { $$ = new ASTNode("<", {$1,$3}); }
+                        | relationalexpression GT additiveexpression { $$ = new ASTNode(">", {$1,$3}); }
+                        | relationalexpression LE additiveexpression { $$ = new ASTNode("<=", {$1,$3}); }
+                        | relationalexpression GE additiveexpression { $$ = new ASTNode(">=", {$1,$3}); }
                         ;
 
 equalityexpression      : relationalexpression
-                        | equalityexpression EQ relationalexpression
-                        | equalityexpression NE relationalexpression
-                        { std::cout << "globaldeclarations\n"; }
+                        | equalityexpression EQ relationalexpression { $$ = new ASTNode("==", {$1,$3}); }
+                        | equalityexpression NE relationalexpression { $$ = new ASTNode("!=", {$1,$3}); }
                         ;
 
 conditionalandexpression: equalityexpression
-                        | conditionalandexpression AND equalityexpression
-                        { std::cout << "globaldeclarations\n"; }
+                        | conditionalandexpression AND equalityexpression { $$ = new ASTNode("&&", {$1,$3}); }
                         ;
 
 conditionalorexpression : conditionalandexpression
-                        | conditionalorexpression OR conditionalandexpression
-                        { std::cout << "globaldeclarations\n"; }
+                        | conditionalorexpression OR conditionalandexpression { $$ = new ASTNode("||", {$1,$3}); }
                         ;
 
 assignmentexpression    : conditionalorexpression
                         | assignment
-                        { std::cout << "globaldeclarations\n"; }
                         ;
 
-assignment              : identifier '=' assignmentexpression
-                        { std::cout << "globaldeclarations\n"; }
+assignment              : identifier ASSIGNMENT assignmentexpression { $$ = new ASTNode("=", {$1,$3}); }
                         ;
 
 expression              : assignmentexpression
-                        { std::cout << "globaldeclarations\n"; }
                         ;
 
 %%
 
-void yy::Parser::error(const std::string& m)
+void yy::Parser::error(const location_type& l, const std::string& m)
 {
-        std::cerr << m << "\n";
-        // okay
+        driver.error(l, m);
 }

@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string>
 #include <fstream>
+#include <iostream>
 
 #include "lexer.h"
 #include "tokens.h"
@@ -34,7 +35,6 @@ LineTerminator          (\r\n|\n|\r)
 Separator               [(){};,]
 terminal                [[:space:]{Separator}]
 Identifier              [_[:alpha:]][_[:alnum:]]*
-Whitespace              ([ \t\f]|{LineTerminator})
 
  /* Numbers shouldn't match the Octal in Java so I'm choosing to follow the
   * Java DecimalNumeral exactly--this will match octals as two consecutive 
@@ -57,18 +57,23 @@ StringLiteral           \"{StringCharacter}*\"
 EscapeSequence          (\\b|\\t|\\n|\\f|\\r|\\\"|\\\\|\\')
 StringCharacter         ([^\r\n"\\]|{EscapeSequence})
 
-
+%{
+#define YY_USER_ACTION  yylloc->columns(yyleng);
+%}
 %%
+%{
+yylloc->step();
+%}
  // Keywords go at the top
-"int" { return token::INT; }
-"boolean" { return token::BOOLEAN; }
+"int" { yylval->a = new ASTNode(yytext); return token::INT; }
+"boolean" { yylval->a = new ASTNode(yytext); return token::BOOLEAN; }
 
-"if" { return token::IF; }
-"else" { return token::ELSE; }
-"while" { return token::WHILE; }
-"break" { return token::BREAK; }
-"return" { return token::RETURN; }
-"void" { return token::VOID; }
+"if" { yylval->a = new ASTNode("if"); return token::IF; }
+"else" { yylval->a = new ASTNode("else"); return token::ELSE; }
+"while" { yylval->a = new ASTNode("while"); return token::WHILE; }
+"break" { yylval->a = new ASTNode("break"); return token::BREAK; }
+"return" { yylval->a = new ASTNode("return"); return token::RETURN; }
+"void" { yylval->a = new ASTNode("void"); return token::VOID; }
 
 ["]  { BEGIN STRING; yymore(); }
 <STRING>{StringCharacter}*  { yymore(); }
@@ -86,7 +91,18 @@ StringCharacter         ([^\r\n"\\]|{EscapeSequence})
     yylineno);
     return token::END;
 }
-<STRING>["] { BEGIN INITIAL; return token::STRING_LITERAL; }
+<STRING>["] { BEGIN INITIAL;     
+    yylval->a = new ASTNode<
+    ASTNodeAttribute<std::string>,
+    ASTNodeAttribute<std::string>,
+    ASTNodeAttribute<int>>(
+        "string", 
+        {}, 
+        {"name", "string"}, 
+        {"value", yytext},
+        {"lineno", yylineno}
+    );
+    return token::STRING_LITERAL; }
 <STRING>\\. { BEGIN ESCAPE; yyless(1); /* ignore opening quotation */ }
 
  /* scan until the end-of-string to see if there are more unknown escapes, then 
@@ -120,25 +136,73 @@ StringCharacter         ([^\r\n"\\]|{EscapeSequence})
 ","     { return token::COMMA; }
 
 [/][/].*             /* do nothing */
-{BooleanLiteral}    { return token::BOOLEAN; }
+true    {  
+    yylval->a = new ASTNode<ASTNodeAttribute<std::string>>(
+        "true",{}, {"value", yytext}
+        ); 
+    return token::TRUE; }
+
+false    {  
+    yylval->a = new ASTNode<ASTNodeAttribute<std::string>>(
+        "false",{}, {"value", yytext}
+        ); 
+    return token::FALSE; }
+
 {OctalLikeNumeral}  { 
-        warning("treating octal-like number as decimal numeral."); 
-        return token::DECIMAL;
-                    }
-{DecimalNumeral}    { return token::DECIMAL; }
-{Identifier}        { return token::ID; }
-{Whitespace}        /* do nothing */
+    warning("treating octal-like number as decimal numeral.");
+    yylval->a = new ASTNode<
+    ASTNodeAttribute<std::string>,
+    ASTNodeAttribute<std::string>,
+    ASTNodeAttribute<int>,
+    ASTNodeAttribute<std::string>>(
+        "number", 
+        {}, 
+        {"name", "number"}, 
+        {"warning", "treating octal-like number as decimal numeral."}, 
+        {"lineno", yylineno}, 
+        {"value", yytext}
+    );
+    return token::NUMBER; }
+
+{DecimalNumeral}    { 
+    yylval->a = new ASTNode<
+    ASTNodeAttribute<std::string>,
+    ASTNodeAttribute<int>,
+    ASTNodeAttribute<std::string>>(
+        "number", 
+        {}, 
+        {"name", "number"}, 
+        {"lineno", yylineno}, 
+        {"value", yytext}
+    );
+    return token::NUMBER; }
+
+{Identifier}        { 
+    yylval->a = new ASTNode<
+    ASTNodeAttribute<std::string>,
+    ASTNodeAttribute<int>>(
+        "id", {}, {"name", yytext}, {"lineno", yylineno}
+        );
+    return token::ID; }1
+
+[ \t\f]+      {
+    yylloc->step();
+}
+
+{LineTerminator}+ {
+    yylloc->lines(yyleng); yylloc->step();
+}
 
  /* catch-all here at the bottom; count up to 10 warnings then error and stop. */
 .                   { 
-                        if(warningno++ < 10)  {
-                            warning("ignoring unknown token '", yytext,"' at line ", yylineno);
-                        }
-                        else { 
-                            error("too many warnings at or near line ", yylineno); 
-                            return token::END;
-                        }  
-                    }
+        if(warningno++ < 10)  {
+            warning("ignoring unknown token '", (int)*yytext,"' at ", *yylloc);
+        }
+        else { 
+            error("too many warnings at  ", *yylloc); 
+            return token::END;
+        }  
+    }
 
 <<EOF>>             { return token::END; }
 %%

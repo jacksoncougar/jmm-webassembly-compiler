@@ -13,7 +13,7 @@
 
 #define YY_DECL            \
     yy::Parser::token_type yy::Lexer::lex( \
-        yy::Parser::semantic_type *yylval)
+        yy::Parser::semantic_type *yylval, yy::Parser::location_type*yylloc)
 #endif
 
 namespace yy
@@ -31,7 +31,7 @@ namespace yy
         }
 
         yy::Parser::token_type lex(
-            yy::Parser::semantic_type *yylval);
+            yy::Parser::semantic_type *yylval, yy::Parser::location_type*yylloc);
     };
 } // namespace yy
 

@@ -1,0 +1,14 @@
+
+int x(int y)
+{
+    return y;
+}
+
+int foo()
+{
+    printf("bar");
+}
+
+void zoid(int a, boolean b) {{{ return; }}}
+
+main() {}

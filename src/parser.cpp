@@ -29,25 +29,29 @@
 
 // This special exception was added by the Free Software Foundation in
 // version 2.2 of Bison.
+// //                    "%code top" blocks.
+#line 23 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:399
 
-
-// First part of user declarations.
-#line 13 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:406
-
+        
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
 #include "lexer.h"
-#include "declarations.h"
+#include "declarations.hpp"
 #include "driver.h"
-
 #undef yylex
 #define yylex driver.lexer->lex
 
 
+#line 47 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:399
 
 
-#line 51 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:406
+// First part of user declarations.
+#line 1 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:406
+        
+int yydebug = 1;
+
+#line 55 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:406
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -61,7 +65,7 @@
 
 // User implementation prologue.
 
-#line 65 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:414
+#line 69 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:414
 
 
 #ifndef YY_
@@ -76,6 +80,25 @@
 # endif
 #endif
 
+#define YYRHSLOC(Rhs, K) ((Rhs)[K].location)
+/* YYLLOC_DEFAULT -- Set CURRENT to span from RHS[1] to RHS[N].
+   If N is 0, then set CURRENT to the empty location which ends
+   the previous symbol: RHS[0] (always defined).  */
+
+# ifndef YYLLOC_DEFAULT
+#  define YYLLOC_DEFAULT(Current, Rhs, N)                               \
+    do                                                                  \
+      if (N)                                                            \
+        {                                                               \
+          (Current).begin  = YYRHSLOC (Rhs, 1).begin;                   \
+          (Current).end    = YYRHSLOC (Rhs, N).end;                     \
+        }                                                               \
+      else                                                              \
+        {                                                               \
+          (Current).begin = (Current).end = YYRHSLOC (Rhs, 0).end;      \
+        }                                                               \
+    while (/*CONSTCOND*/ false)
+# endif
 
 
 // Suppress unused-variable warnings by "using" E.
@@ -128,7 +151,7 @@
 
 
 namespace yy {
-#line 132 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:481
+#line 155 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:481
 
   /* Return YYSTR after stripping away unnecessary quotes and
      backslashes, so that it's suitable for yyerror.  The heuristic is
@@ -186,8 +209,9 @@ namespace yy {
   | Symbol types.  |
   `---------------*/
 
-  Parser::syntax_error::syntax_error (const std::string& m)
+  Parser::syntax_error::syntax_error (const location_type& l, const std::string& m)
     : std::runtime_error (m)
+    , location (l)
   {}
 
   // basic_symbol.
@@ -200,22 +224,25 @@ namespace yy {
   Parser::basic_symbol<Base>::basic_symbol (const basic_symbol& other)
     : Base (other)
     , value ()
+    , location (other.location)
   {
     value = other.value;
   }
 
   template <typename Base>
-  Parser::basic_symbol<Base>::basic_symbol (typename Base::kind_type t, const semantic_type& v)
+  Parser::basic_symbol<Base>::basic_symbol (typename Base::kind_type t, const semantic_type& v, const location_type& l)
     : Base (t)
     , value (v)
+    , location (l)
   {}
 
 
   /// Constructor for valueless symbols.
   template <typename Base>
-  Parser::basic_symbol<Base>::basic_symbol (typename Base::kind_type t)
+  Parser::basic_symbol<Base>::basic_symbol (typename Base::kind_type t, const location_type& l)
     : Base (t)
     , value ()
+    , location (l)
   {}
 
   template <typename Base>
@@ -244,6 +271,7 @@ namespace yy {
   {
     super_type::move (s);
     value = s.value;
+    location = s.location;
   }
 
   // by_type.
@@ -318,13 +346,13 @@ namespace yy {
   {}
 
   Parser::stack_symbol_type::stack_symbol_type (const stack_symbol_type& that)
-    : super_type (that.state)
+    : super_type (that.state, that.location)
   {
     value = that.value;
   }
 
   Parser::stack_symbol_type::stack_symbol_type (state_type s, symbol_type& that)
-    : super_type (s)
+    : super_type (s, that.location)
   {
     value = that.value;
     // that is emptied.
@@ -336,6 +364,7 @@ namespace yy {
   {
     state = that.state;
     value = that.value;
+    location = that.location;
     return *this;
   }
 
@@ -365,7 +394,8 @@ namespace yy {
     if (yysym.empty ())
       std::abort ();
     yyo << (yytype < yyntokens_ ? "token" : "nterm")
-        << ' ' << yytname_[yytype] << " (";
+        << ' ' << yytname_[yytype] << " ("
+        << yysym.location << ": ";
     YYUSE (yytype);
     yyo << ')';
   }
@@ -456,6 +486,9 @@ namespace yy {
     /// The lookahead symbol.
     symbol_type yyla;
 
+    /// The locations where the error started and ended.
+    stack_symbol_type yyerror_range[3];
+
     /// The return value of parse ().
     int yyresult;
 
@@ -465,6 +498,14 @@ namespace yy {
       {
     YYCDEBUG << "Starting parse\n";
 
+
+    // User initialization code.
+    #line 42 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:737
+{
+    yyla.location.begin.filename = yyla.location.end.filename = &driver.streamname;
+}
+
+#line 509 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:737
 
     /* Initialize the stack.  The initial state will be set in
        yynewstate, since the latter expects the semantical and the
@@ -497,7 +538,7 @@ namespace yy {
         YYCDEBUG << "Reading a token: ";
         try
           {
-            yyla.type = yytranslate_ (yylex (&yyla.value));
+            yyla.type = yytranslate_ (yylex (&yyla.value, &yyla.location));
           }
         catch (const syntax_error& yyexc)
           {
@@ -559,6 +600,12 @@ namespace yy {
       else
         yylhs.value = yystack_[0].value;
 
+      // Default location.
+      {
+        slice<stack_symbol_type, stack_type> slice (yystack_, yylen);
+        YYLLOC_DEFAULT (yylhs.location, slice, yylen);
+        yyerror_range[1].location = yylhs.location;
+      }
 
       // Perform the reduction.
       YY_REDUCE_PRINT (yyn);
@@ -566,188 +613,290 @@ namespace yy {
         {
           switch (yyn)
             {
-  case 11:
-#line 97 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 573 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+  case 3:
+#line 131 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { std::cout << *(yystack_[0].value.a); }
+#line 620 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
-  case 14:
-#line 103 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclaration\n"; }
-#line 579 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+  case 10:
+#line 143 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("globaldeclaration", {(yystack_[0].value.a)}); }
+#line 626 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 11:
+#line 144 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a)->add((yystack_[0].value.a)); }
+#line 632 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 15:
-#line 107 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "variabledeclaration\n"; }
-#line 585 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
-    break;
-
-  case 16:
-#line 111 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "identifier\n"; }
-#line 591 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 153 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("variabledeclaration", {(yystack_[2].value.a), (yystack_[1].value.a)}); }
+#line 638 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 17:
-#line 115 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "functiondeclaration\n"; }
-#line 597 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 160 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("function_decl", {(yystack_[1].value.a), (yystack_[0].value.a)}); }
+#line 644 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 18:
+#line 164 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("function_header", {(yystack_[1].value.a), (yystack_[0].value.a)}); }
+#line 650 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 19:
-#line 120 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 603 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 167 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("function_header", {(yystack_[1].value.a), (yystack_[0].value.a)}); }
+#line 656 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 20:
+#line 170 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("functiondeclarator", {(yystack_[3].value.a), (yystack_[1].value.a)}); }
+#line 662 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 21:
-#line 125 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 609 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 171 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("functiondeclarator", {(yystack_[2].value.a)}); }
+#line 668 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 22:
+#line 174 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("formalparameterlist", {(yystack_[0].value.a)}); }
+#line 674 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 23:
-#line 130 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 615 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 175 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a)->add((yystack_[0].value.a)); }
+#line 680 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 24:
-#line 134 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 621 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 178 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("formalparameter", {(yystack_[1].value.a), (yystack_[0].value.a)}); }
+#line 686 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 25:
-#line 138 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 627 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 182 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("mainfunctiondeclaration", {(yystack_[1].value.a), (yystack_[0].value.a)}); }
+#line 692 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 26:
-#line 142 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 633 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 185 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = (yystack_[2].value.a); }
+#line 698 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 27:
+#line 188 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("block", {(yystack_[1].value.a)}); }
+#line 704 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 28:
-#line 147 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 639 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 189 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("block"); }
+#line 710 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 29:
+#line 193 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("blockstatements", {(yystack_[0].value.a)}); }
+#line 716 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 30:
-#line 152 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 645 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 194 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a)->add((yystack_[0].value.a)); }
+#line 722 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
-  case 32:
-#line 157 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 651 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+  case 34:
+#line 202 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("nullstatement"); }
+#line 728 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 35:
+#line 203 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = (yystack_[1].value.a); }
+#line 734 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 37:
+#line 205 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("return", {(yystack_[1].value.a)}); }
+#line 740 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 39:
+#line 207 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("if", {(yystack_[2].value.a),(yystack_[0].value.a)}); }
+#line 746 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 40:
+#line 208 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("ifelse", {(yystack_[4].value.a),(yystack_[2].value.a),(yystack_[0].value.a)}); }
+#line 752 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 41:
-#line 169 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 657 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 209 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("while", {(yystack_[2].value.a),(yystack_[0].value.a)}); }
+#line 758 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 42:
+#line 212 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("statementexpression", {(yystack_[0].value.a)}); }
+#line 764 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 43:
-#line 174 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 663 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 213 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("retstatementexpressionurn", {(yystack_[0].value.a)}); }
+#line 770 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
-  case 46:
-#line 180 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 669 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+  case 45:
+#line 217 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = (yystack_[1].value.a); }
+#line 776 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 47:
+#line 221 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("argumentlist", {(yystack_[0].value.a)}); }
+#line 782 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 48:
-#line 185 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 675 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 222 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a)->add((yystack_[0].value.a)); }
+#line 788 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 49:
+#line 225 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("functioninvocation", {(yystack_[3].value.a),(yystack_[1].value.a)}); }
+#line 794 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 50:
-#line 190 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 681 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 226 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("functioninvocation", {(yystack_[2].value.a)}); }
+#line 800 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
-  case 52:
-#line 195 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 687 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+  case 53:
+#line 233 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("-", {(yystack_[0].value.a)}); }
+#line 806 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
-  case 55:
-#line 201 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 693 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+  case 54:
+#line 234 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("!", {(yystack_[0].value.a)}); }
+#line 812 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 57:
+#line 239 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("*", {(yystack_[2].value.a),(yystack_[0].value.a)}); }
+#line 818 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 58:
+#line 240 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("/", {(yystack_[2].value.a),(yystack_[0].value.a)}); }
+#line 824 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 59:
-#line 208 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 699 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 241 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("%", {(yystack_[2].value.a),(yystack_[0].value.a)}); }
+#line 830 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 61:
+#line 245 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("+", {(yystack_[2].value.a),(yystack_[0].value.a)}); }
+#line 836 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 62:
-#line 214 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 705 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 246 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("-", {(yystack_[2].value.a),(yystack_[0].value.a)}); }
+#line 842 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 64:
+#line 250 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("<", {(yystack_[2].value.a),(yystack_[0].value.a)}); }
+#line 848 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 65:
+#line 251 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode(">", {(yystack_[2].value.a),(yystack_[0].value.a)}); }
+#line 854 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 66:
+#line 252 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("<=", {(yystack_[2].value.a),(yystack_[0].value.a)}); }
+#line 860 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 67:
-#line 222 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 711 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 253 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode(">=", {(yystack_[2].value.a),(yystack_[0].value.a)}); }
+#line 866 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+    break;
+
+  case 69:
+#line 257 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("==", {(yystack_[2].value.a),(yystack_[0].value.a)}); }
+#line 872 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 70:
-#line 228 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 717 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 258 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("!=", {(yystack_[2].value.a),(yystack_[0].value.a)}); }
+#line 878 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 72:
-#line 233 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 723 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 262 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("&&", {(yystack_[2].value.a),(yystack_[0].value.a)}); }
+#line 884 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 74:
-#line 238 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 729 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
-    break;
-
-  case 76:
-#line 243 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 735 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 266 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("||", {(yystack_[2].value.a),(yystack_[0].value.a)}); }
+#line 890 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
   case 77:
-#line 247 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 741 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
-    break;
-
-  case 78:
-#line 251 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
-    { std::cout << "globaldeclarations\n"; }
-#line 747 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 273 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:856
+    { (yylhs.value.a) = new ASTNode("=", {(yystack_[2].value.a),(yystack_[0].value.a)}); }
+#line 896 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
     break;
 
 
-#line 751 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
+#line 900 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:856
             default:
               break;
             }
@@ -775,10 +924,11 @@ namespace yy {
     if (!yyerrstatus_)
       {
         ++yynerrs_;
-        error (yysyntax_error_ (yystack_[0].state, yyla));
+        error (yyla.location, yysyntax_error_ (yystack_[0].state, yyla));
       }
 
 
+    yyerror_range[1].location = yyla.location;
     if (yyerrstatus_ == 3)
       {
         /* If just tried and failed to reuse lookahead token after an
@@ -839,11 +989,14 @@ namespace yy {
           if (yystack_.size () == 1)
             YYABORT;
 
+          yyerror_range[1].location = yystack_[0].location;
           yy_destroy_ ("Error: popping", yystack_[0]);
           yypop_ ();
           YY_STACK_PRINT ();
         }
 
+      yyerror_range[2].location = yyla.location;
+      YYLLOC_DEFAULT (error_token.location, yyerror_range, 2);
 
       // Shift the error token.
       error_token.state = yyn;
@@ -896,7 +1049,7 @@ namespace yy {
   void
   Parser::error (const syntax_error& yyexc)
   {
-    error (yyexc.what ());
+    error (yyexc.location, yyexc.what ());
   }
 
   // Generate an error message.
@@ -997,27 +1150,27 @@ namespace yy {
   }
 
 
-  const signed char Parser::yypact_ninf_ = -59;
+  const signed char Parser::yypact_ninf_ = -77;
 
   const signed char Parser::yytable_ninf_ = -1;
 
   const short int
   Parser::yypact_[] =
   {
-     128,   -59,   -59,   -59,     8,    18,     8,   128,   -59,   -59,
-       6,   -59,    15,   -59,    15,    45,   -59,   -59,    46,   -59,
-     -59,    75,    98,   -59,   -59,     7,   -59,   -59,    50,    79,
-      36,    83,   -59,   -59,     8,   -59,    -5,   -59,   115,   -59,
-     -59,    84,   -59,   -59,   -59,     8,    -3,   -59,    60,    60,
-     -59,   -59,   -59,   -59,    60,   -59,    60,    60,   -59,    -5,
-     -59,   -59,   -59,   -59,    49,   -24,   -27,    22,   111,   122,
-     -59,   -59,    92,   -59,   102,    55,    60,   -59,   -59,   -59,
-     -59,   -59,    64,   103,   104,   113,   112,   -59,   -59,    60,
-      60,    60,    60,    60,    60,    60,    60,    60,    60,    60,
-      60,    60,   -59,   -59,    29,   -59,   -59,   -59,    14,    14,
-     -59,   -59,   -59,   -59,    49,    49,   -24,   -24,   -24,   -24,
-     -27,   -27,    22,   111,   -59,    60,   139,   -59,   -59,    14,
-     -59
+      17,   -77,   -77,   -77,    11,    28,    11,    17,   -77,   -77,
+      43,   -77,   -16,   -77,   -16,    46,   -77,   -77,    -4,   -77,
+     -77,     3,    38,   -77,   -77,     4,   -77,   -77,    74,    80,
+      92,    49,   -77,   -77,    11,   -77,   -13,   -77,    85,   -77,
+     -77,    82,   -77,   -77,   -77,    11,     8,   -77,   145,   145,
+     -77,   -77,   -77,   -77,   145,   145,   145,   -77,   -77,   -13,
+     -77,   -77,   -77,   -77,    53,    32,    36,    40,    98,    99,
+     -77,   -77,    89,   -77,    91,   145,   131,   -77,   -77,   -77,
+     -77,   -77,    78,   107,   108,   100,   -77,   -77,   109,   145,
+     145,   145,   145,   145,   145,   145,   145,   145,   145,   145,
+     145,   145,   -77,   -77,   -77,    22,   -77,   -77,   111,   111,
+     -77,   -77,   -77,   -77,    53,    53,    32,    32,    32,    32,
+      36,    36,    40,    98,   -77,   145,   125,   -77,   -77,   111,
+     -77
   };
 
   const unsigned char
@@ -1028,13 +1181,13 @@ namespace yy {
       11,     0,     0,    17,    25,     0,    15,    26,     0,     0,
        0,     0,    28,    34,     0,    31,     0,    33,     0,    29,
       32,     0,    43,    42,    21,     0,     0,    22,     0,     0,
-       4,     5,     6,     7,     0,    38,     0,     0,    44,    52,
+       4,     5,     6,     7,     0,     0,     0,    38,    44,    52,
       51,    46,    55,    56,    60,    63,    68,    71,    73,    75,
       78,    76,     0,    36,     0,     0,     0,    27,    30,    35,
-      24,    20,     0,     0,     0,     0,    52,    53,    54,     0,
+      24,    20,     0,     0,     0,    52,    53,    54,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,    37,    50,     0,    47,    77,    23,     0,     0,
-      45,    57,    58,    59,    62,    61,    67,    66,    64,    65,
+       0,     0,    37,    77,    50,     0,    47,    23,     0,     0,
+      45,    57,    58,    59,    61,    62,    64,    65,    67,    66,
       69,    70,    72,    74,    49,     0,    39,    41,    48,     0,
       40
   };
@@ -1042,95 +1195,97 @@ namespace yy {
   const short int
   Parser::yypgoto_[] =
   {
-     -59,   -59,   -59,   -12,   -59,   147,   -10,     0,   -59,   -59,
-     149,   -59,    77,   -59,   -59,   137,   -59,   123,   -58,   -59,
-     -59,   -59,   -19,   -59,    30,   -15,    51,     4,    62,    59,
-     -59,    87,   -17,   -40
+     -77,   -77,   -77,   -14,   -77,   138,     1,     0,   -77,   -77,
+     141,   -77,    72,   -77,   -77,    71,   -77,   115,   -76,   -77,
+     -77,   -77,   -19,   -77,   -39,    29,   -15,     2,    57,    58,
+     -77,    83,   -17,   -47
   };
 
   const signed char
   Parser::yydefgoto_[] =
   {
-      -1,     5,    58,     6,     7,     8,     9,    86,    11,    12,
+      -1,     5,    58,     6,     7,     8,     9,    85,    11,    12,
       16,    46,    47,    13,    14,    37,    38,    39,    40,    41,
-      60,   104,    61,    62,    63,    64,    65,    66,    67,    68,
+      60,   105,    61,    62,    63,    64,    65,    66,    67,    68,
       69,    70,    71,    72
   };
 
   const unsigned char
   Parser::yytable_[] =
   {
-      10,    94,    95,    42,    15,    43,    18,    10,    83,    84,
-      34,     1,    35,    45,    85,     2,     3,     1,    17,    42,
-      92,    43,    36,    96,    97,    93,    34,    28,    35,    29,
-      59,    30,    31,    75,    74,   105,    81,    82,    36,     1,
-      50,    51,    52,    53,    21,    80,    44,    76,    59,    59,
-     126,   127,    98,    99,    59,    22,    22,    33,     1,    50,
-      51,    52,    53,     1,    50,    51,    52,    53,   124,   125,
-      45,   130,     2,     3,    54,    59,    59,   114,   115,    55,
-      56,    57,    26,    25,    25,   128,    87,    88,    48,    42,
-      42,    43,    43,    54,   103,    89,    90,    91,    54,    56,
-      57,     1,   120,   121,    56,    57,     2,     3,    36,    36,
-      42,    28,    43,    29,    27,    30,    31,    49,     1,   111,
-     112,   113,   100,     2,     3,    59,    73,    79,    28,    36,
-      29,     1,    30,    31,   101,   102,     2,     3,    26,    22,
-      32,    33,   108,   109,     4,   116,   117,   118,   119,    23,
-      75,    24,   110,   129,    20,    19,    22,    77,    33,   107,
-     123,    78,   122,   106
+      10,    83,    84,    42,    15,    43,    18,    10,    34,    88,
+      75,    45,     2,     3,     1,    86,    87,    22,    76,    42,
+       1,    43,    36,    35,    34,     2,     3,    25,    17,   106,
+      59,    26,   126,   127,    74,    27,    44,     4,    36,    35,
+      81,     1,    92,    93,    82,    80,     2,     3,    59,    59,
+     111,   112,   113,   130,   124,    28,    59,    29,   125,    30,
+      31,    94,    95,    96,    97,    89,    90,    91,    45,    98,
+      99,    22,    32,    33,    21,    59,    59,    25,   128,   116,
+     117,   118,   119,    23,    73,    24,     2,     3,     1,    42,
+      42,    43,    43,     2,     3,     1,    50,    51,    52,    53,
+     120,   121,    28,    54,    29,    48,    30,    31,    36,    36,
+      42,    49,    43,   100,     1,   101,    55,    79,    22,    77,
+      33,   114,   115,    56,   102,    59,    26,    57,    28,    36,
+      29,    76,    30,    31,     1,    50,    51,    52,    53,   108,
+     109,   110,    54,   129,    22,    20,    33,    19,     1,    50,
+      51,    52,    53,    78,   107,    55,    54,   122,   103,   123,
+       0,     0,    56,   104,     0,     0,     0,     0,     0,    55,
+       0,     0,     0,     0,     0,     0,    56
   };
 
-  const unsigned char
+  const short int
   Parser::yycheck_[] =
   {
-       0,    28,    29,    22,     4,    22,     6,     7,    48,    49,
-      22,     3,    22,    25,    54,     8,     9,     3,     0,    38,
-      44,    38,    22,    50,    51,    49,    38,    13,    38,    15,
-      30,    17,    18,    38,    34,    75,    39,    40,    38,     3,
-       4,     5,     6,     7,    38,    45,    39,    52,    48,    49,
-     108,   109,    30,    31,    54,    41,    41,    43,     3,     4,
-       5,     6,     7,     3,     4,     5,     6,     7,    39,    40,
-      82,   129,     8,     9,    38,    75,    76,    92,    93,    43,
-      44,    45,    36,    38,    38,   125,    56,    57,    38,   108,
-     109,   108,   109,    38,    39,    46,    47,    48,    38,    44,
-      45,     3,    98,    99,    44,    45,     8,     9,   108,   109,
-     129,    13,   129,    15,    39,    17,    18,    38,     3,    89,
-      90,    91,    11,     8,     9,   125,    43,    43,    13,   129,
-      15,     3,    17,    18,    12,    43,     8,     9,    36,    41,
-      42,    43,    39,    39,    16,    94,    95,    96,    97,    12,
-      38,    14,    39,    14,     7,     6,    41,    42,    43,    82,
-     101,    38,   100,    76
+       0,    48,    49,    22,     4,    22,     6,     7,    22,    56,
+      23,    25,     8,     9,     3,    54,    55,    33,    31,    38,
+       3,    38,    22,    22,    38,     8,     9,    31,     0,    76,
+      30,    35,   108,   109,    34,    32,    32,    20,    38,    38,
+      32,     3,    10,    11,    36,    45,     8,     9,    48,    49,
+      89,    90,    91,   129,    32,    17,    56,    19,    36,    21,
+      22,    25,    26,    27,    28,    12,    13,    14,    82,    29,
+      30,    33,    34,    35,    31,    75,    76,    31,   125,    94,
+      95,    96,    97,    12,    35,    14,     8,     9,     3,   108,
+     109,   108,   109,     8,     9,     3,     4,     5,     6,     7,
+      98,    99,    17,    11,    19,    31,    21,    22,   108,   109,
+     129,    31,   129,    15,     3,    16,    24,    35,    33,    34,
+      35,    92,    93,    31,    35,   125,    35,    35,    17,   129,
+      19,    31,    21,    22,     3,     4,     5,     6,     7,    32,
+      32,    32,    11,    18,    33,     7,    35,     6,     3,     4,
+       5,     6,     7,    38,    82,    24,    11,   100,    75,   101,
+      -1,    -1,    31,    32,    -1,    -1,    -1,    -1,    -1,    24,
+      -1,    -1,    -1,    -1,    -1,    -1,    31
   };
 
   const unsigned char
   Parser::yystos_[] =
   {
-       0,     3,     8,     9,    16,    54,    56,    57,    58,    59,
-      60,    61,    62,    66,    67,    60,    63,     0,    60,    63,
-      58,    38,    41,    68,    68,    38,    36,    39,    13,    15,
-      17,    18,    42,    43,    56,    59,    60,    68,    69,    70,
-      71,    72,    75,    85,    39,    56,    64,    65,    38,    38,
-       4,     5,     6,     7,    38,    43,    44,    45,    55,    60,
-      73,    75,    76,    77,    78,    79,    80,    81,    82,    83,
-      84,    85,    86,    43,    60,    38,    52,    42,    70,    43,
-      60,    39,    40,    86,    86,    86,    60,    77,    77,    46,
-      47,    48,    44,    49,    28,    29,    50,    51,    30,    31,
-      11,    12,    43,    39,    74,    86,    84,    65,    39,    39,
-      39,    77,    77,    77,    78,    78,    79,    79,    79,    79,
-      80,    80,    81,    82,    39,    40,    71,    71,    86,    14,
-      71
+       0,     3,     8,     9,    20,    38,    40,    41,    42,    43,
+      44,    45,    46,    50,    51,    44,    47,     0,    44,    47,
+      42,    31,    33,    52,    52,    31,    35,    32,    17,    19,
+      21,    22,    34,    35,    40,    43,    44,    52,    53,    54,
+      55,    56,    59,    69,    32,    40,    48,    49,    31,    31,
+       4,     5,     6,     7,    11,    24,    31,    35,    39,    44,
+      57,    59,    60,    61,    62,    63,    64,    65,    66,    67,
+      68,    69,    70,    35,    44,    23,    31,    34,    54,    35,
+      44,    32,    36,    70,    70,    44,    61,    61,    70,    12,
+      13,    14,    10,    11,    25,    26,    27,    28,    29,    30,
+      15,    16,    35,    68,    32,    58,    70,    49,    32,    32,
+      32,    61,    61,    61,    62,    62,    63,    63,    63,    63,
+      64,    64,    65,    66,    32,    36,    55,    55,    70,    18,
+      55
   };
 
   const unsigned char
   Parser::yyr1_[] =
   {
-       0,    53,    54,    54,    55,    55,    55,    55,    56,    56,
-      57,    57,    58,    58,    58,    59,    60,    61,    62,    62,
-      63,    63,    64,    64,    65,    66,    67,    68,    68,    69,
-      69,    70,    70,    71,    71,    71,    71,    71,    71,    71,
-      71,    71,    72,    72,    73,    73,    73,    74,    74,    75,
-      75,    76,    76,    77,    77,    77,    78,    78,    78,    78,
-      79,    79,    79,    80,    80,    80,    80,    80,    81,    81,
-      81,    82,    82,    83,    83,    84,    84,    85,    86
+       0,    37,    38,    38,    39,    39,    39,    39,    40,    40,
+      41,    41,    42,    42,    42,    43,    44,    45,    46,    46,
+      47,    47,    48,    48,    49,    50,    51,    52,    52,    53,
+      53,    54,    54,    55,    55,    55,    55,    55,    55,    55,
+      55,    55,    56,    56,    57,    57,    57,    58,    58,    59,
+      59,    60,    60,    61,    61,    61,    62,    62,    62,    62,
+      63,    63,    63,    64,    64,    64,    64,    64,    65,    65,
+      65,    66,    66,    67,    67,    68,    68,    69,    70
   };
 
   const unsigned char
@@ -1154,36 +1309,35 @@ namespace yy {
   const Parser::yytname_[] =
   {
   "END", "error", "$undefined", "ID", "NUMBER", "STRING_LITERAL", "TRUE",
-  "FALSE", "BOOLEAN", "INT", "DECIMAL", "AND", "OR", "IF", "ELSE", "WHILE",
-  "VOID", "RETURN", "BREAK", "PLUS", "MINUS", "MULTIPLY", "DIVIDE",
-  "MODULO", "ASSIGNMENT", "NOT", "LT", "GT", "GE", "LE", "EQ", "NE",
+  "FALSE", "BOOLEAN", "INT", "PLUS", "MINUS", "MULTIPLY", "DIVIDE",
+  "MODULO", "AND", "OR", "IF", "ELSE", "WHILE", "VOID", "RETURN", "BREAK",
+  "ASSIGNMENT", "NOT", "LT", "GT", "GE", "LE", "EQ", "NE",
   "PARENTHESIS_OPEN", "PARENTHESIS_CLOSE", "BRACE_OPEN", "BRACE_CLOSE",
-  "SEMICOLON", "COMMA", "'('", "')'", "','", "'{'", "'}'", "';'", "'-'",
-  "'!'", "'*'", "'/'", "'%'", "'+'", "'<'", "'>'", "'='", "$accept",
-  "start", "literal", "type", "globaldeclarations", "globaldeclaration",
-  "variabledeclaration", "identifier", "functiondeclaration",
-  "functionheader", "functiondeclarator", "formalparameterlist",
-  "formalparameter", "mainfunctiondeclaration", "mainfunctiondeclarator",
-  "block", "blockstatements", "blockstatement", "statement",
-  "statementexpression", "primary", "argumentlist", "functioninvocation",
-  "postfixexpression", "unaryexpression", "multiplicativeexpression",
-  "additiveexpression", "relationalexpression", "equalityexpression",
-  "conditionalandexpression", "conditionalorexpression",
-  "assignmentexpression", "assignment", "expression", YY_NULLPTR
+  "SEMICOLON", "COMMA", "$accept", "start", "literal", "type",
+  "globaldeclarations", "globaldeclaration", "variabledeclaration",
+  "identifier", "functiondeclaration", "functionheader",
+  "functiondeclarator", "formalparameterlist", "formalparameter",
+  "mainfunctiondeclaration", "mainfunctiondeclarator", "block",
+  "blockstatements", "blockstatement", "statement", "statementexpression",
+  "primary", "argumentlist", "functioninvocation", "postfixexpression",
+  "unaryexpression", "multiplicativeexpression", "additiveexpression",
+  "relationalexpression", "equalityexpression", "conditionalandexpression",
+  "conditionalorexpression", "assignmentexpression", "assignment",
+  "expression", YY_NULLPTR
   };
 
 #if YYDEBUG
-  const unsigned char
+  const unsigned short int
   Parser::yyrline_[] =
   {
-       0,    82,    82,    83,    86,    87,    88,    89,    91,    92,
-      95,    96,   100,   101,   102,   106,   110,   114,   118,   119,
-     123,   124,   128,   129,   133,   137,   141,   145,   146,   150,
-     151,   155,   156,   160,   161,   162,   163,   164,   165,   166,
-     167,   168,   172,   173,   177,   178,   179,   183,   184,   188,
-     189,   193,   194,   198,   199,   200,   204,   205,   206,   207,
-     211,   212,   213,   217,   218,   219,   220,   221,   225,   226,
-     227,   231,   232,   236,   237,   241,   242,   246,   250
+       0,   130,   130,   131,   134,   135,   136,   137,   139,   140,
+     143,   144,   147,   148,   149,   153,   156,   159,   163,   166,
+     170,   171,   174,   175,   178,   181,   185,   188,   189,   192,
+     194,   197,   198,   201,   202,   203,   204,   205,   206,   207,
+     208,   209,   212,   213,   216,   217,   218,   221,   222,   225,
+     226,   229,   230,   233,   234,   235,   238,   239,   240,   241,
+     244,   245,   246,   249,   250,   251,   252,   253,   256,   257,
+     258,   261,   262,   265,   266,   269,   270,   273,   276
   };
 
   // Print the state stack on the debug stream.
@@ -1226,16 +1380,16 @@ namespace yy {
      0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,    45,     2,     2,     2,    48,     2,     2,
-      38,    39,    46,    49,    40,    44,     2,    47,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,    43,
-      50,    52,    51,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,    41,     2,    42,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -1252,9 +1406,9 @@ namespace yy {
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
       25,    26,    27,    28,    29,    30,    31,    32,    33,    34,
-      35,    36,    37
+      35,    36
     };
-    const unsigned user_token_number_max_ = 292;
+    const unsigned user_token_number_max_ = 291;
     const token_number_type undef_token_ = 2;
 
     if (static_cast<int> (t) <= yyeof_)
@@ -1267,12 +1421,11 @@ namespace yy {
 
 
 } // yy
-#line 1271 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:1163
-#line 254 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:1164
+#line 1425 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.cpp" // lalr1.cc:1163
+#line 279 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:1164
 
 
-void yy::Parser::error(const std::string& m)
+void yy::Parser::error(const location_type& l, const std::string& m)
 {
-        std::cerr << m << "\n";
-        // okay
+        driver.error(l, m);
 }

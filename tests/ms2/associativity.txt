@@ -1,0 +1,4 @@
+main() {
+    return x = y = z = 1; // right
+    return x || y || z || 1; // left
+}

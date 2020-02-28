@@ -13,7 +13,6 @@
 #include "driver.h"
 #include "parser.hpp"
 
-
 int main(int argc, char **argv)
 {
     try
@@ -34,6 +33,7 @@ int main(int argc, char **argv)
         }
 
         yy::Driver driver;
+        driver.streamname = argv[1]; // for printing errors 
         driver.parse_stream(ifs);
     }
     catch (const char *e)

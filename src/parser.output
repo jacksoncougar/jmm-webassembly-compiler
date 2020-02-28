@@ -1,0 +1,1803 @@
+State 126 conflicts: 1 shift/reduce
+
+
+Grammar
+
+    0 $accept: start END
+
+    1 start: %empty
+    2      | globaldeclarations
+
+    3 literal: NUMBER
+    4        | STRING_LITERAL
+    5        | TRUE
+    6        | FALSE
+
+    7 type: BOOLEAN
+    8     | INT
+
+    9 globaldeclarations: globaldeclaration
+   10                   | globaldeclarations globaldeclaration
+
+   11 globaldeclaration: variabledeclaration
+   12                  | functiondeclaration
+   13                  | mainfunctiondeclaration
+
+   14 variabledeclaration: type identifier SEMICOLON
+
+   15 identifier: ID
+
+   16 functiondeclaration: functionheader block
+
+   17 functionheader: type functiondeclarator
+   18               | VOID functiondeclarator
+
+   19 functiondeclarator: identifier PARENTHESIS_OPEN formalparameterlist PARENTHESIS_CLOSE
+   20                   | identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE
+
+   21 formalparameterlist: formalparameter
+   22                    | formalparameterlist COMMA formalparameter
+
+   23 formalparameter: type identifier
+
+   24 mainfunctiondeclaration: mainfunctiondeclarator block
+
+   25 mainfunctiondeclarator: identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE
+
+   26 block: BRACE_OPEN blockstatements BRACE_CLOSE
+   27      | BRACE_OPEN BRACE_CLOSE
+
+   28 blockstatements: blockstatement
+   29                | blockstatements blockstatement
+
+   30 blockstatement: variabledeclaration
+   31               | statement
+
+   32 statement: block
+   33          | SEMICOLON
+   34          | statementexpression SEMICOLON
+   35          | BREAK SEMICOLON
+   36          | RETURN expression SEMICOLON
+   37          | RETURN SEMICOLON
+   38          | IF PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement
+   39          | IF PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement ELSE statement
+   40          | WHILE PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement
+
+   41 statementexpression: assignment
+   42                    | functioninvocation
+
+   43 primary: literal
+   44        | PARENTHESIS_OPEN expression PARENTHESIS_CLOSE
+   45        | functioninvocation
+
+   46 argumentlist: expression
+   47             | argumentlist COMMA expression
+
+   48 functioninvocation: identifier PARENTHESIS_OPEN argumentlist PARENTHESIS_CLOSE
+   49                   | identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE
+
+   50 postfixexpression: primary
+   51                  | identifier
+
+   52 unaryexpression: MINUS unaryexpression
+   53                | NOT unaryexpression
+   54                | postfixexpression
+
+   55 multiplicativeexpression: unaryexpression
+   56                         | multiplicativeexpression MULTIPLY unaryexpression
+   57                         | multiplicativeexpression DIVIDE unaryexpression
+   58                         | multiplicativeexpression MODULO unaryexpression
+
+   59 additiveexpression: multiplicativeexpression
+   60                   | additiveexpression PLUS multiplicativeexpression
+   61                   | additiveexpression MINUS multiplicativeexpression
+
+   62 relationalexpression: additiveexpression
+   63                     | relationalexpression LT additiveexpression
+   64                     | relationalexpression GT additiveexpression
+   65                     | relationalexpression LE additiveexpression
+   66                     | relationalexpression GE additiveexpression
+
+   67 equalityexpression: relationalexpression
+   68                   | equalityexpression EQ relationalexpression
+   69                   | equalityexpression NE relationalexpression
+
+   70 conditionalandexpression: equalityexpression
+   71                         | conditionalandexpression AND equalityexpression
+
+   72 conditionalorexpression: conditionalandexpression
+   73                        | conditionalorexpression OR conditionalandexpression
+
+   74 assignmentexpression: conditionalorexpression
+   75                     | assignment
+
+   76 assignment: identifier ASSIGNMENT assignmentexpression
+
+   77 expression: assignmentexpression
+
+
+Terminals, with rules where they appear
+
+END (0) 0
+error (256)
+ID (258) 15
+NUMBER (259) 3
+STRING_LITERAL (260) 4
+TRUE (261) 5
+FALSE (262) 6
+BOOLEAN (263) 7
+INT (264) 8
+AND (265) 71
+OR (266) 73
+IF (267) 38 39
+ELSE (268) 39
+WHILE (269) 40
+VOID (270) 18
+RETURN (271) 36 37
+BREAK (272) 35
+PLUS (273) 60
+MINUS (274) 52 61
+MULTIPLY (275) 56
+DIVIDE (276) 57
+MODULO (277) 58
+ASSIGNMENT (278) 76
+NOT (279) 53
+LT (280) 63
+GT (281) 64
+GE (282) 66
+LE (283) 65
+EQ (284) 68
+NE (285) 69
+PARENTHESIS_OPEN (286) 19 20 25 38 39 40 44 48 49
+PARENTHESIS_CLOSE (287) 19 20 25 38 39 40 44 48 49
+BRACE_OPEN (288) 26 27
+BRACE_CLOSE (289) 26 27
+SEMICOLON (290) 14 33 34 35 36 37
+COMMA (291) 22 47
+
+
+Nonterminals, with rules where they appear
+
+$accept (37)
+    on left: 0
+start (38)
+    on left: 1 2, on right: 0
+literal (39)
+    on left: 3 4 5 6, on right: 43
+type (40)
+    on left: 7 8, on right: 14 17 23
+globaldeclarations (41)
+    on left: 9 10, on right: 2 10
+globaldeclaration (42)
+    on left: 11 12 13, on right: 9 10
+variabledeclaration (43)
+    on left: 14, on right: 11 30
+identifier (44)
+    on left: 15, on right: 14 19 20 23 25 48 49 51 76
+functiondeclaration (45)
+    on left: 16, on right: 12
+functionheader (46)
+    on left: 17 18, on right: 16
+functiondeclarator (47)
+    on left: 19 20, on right: 17 18
+formalparameterlist (48)
+    on left: 21 22, on right: 19 22
+formalparameter (49)
+    on left: 23, on right: 21 22
+mainfunctiondeclaration (50)
+    on left: 24, on right: 13
+mainfunctiondeclarator (51)
+    on left: 25, on right: 24
+block (52)
+    on left: 26 27, on right: 16 24 32
+blockstatements (53)
+    on left: 28 29, on right: 26 29
+blockstatement (54)
+    on left: 30 31, on right: 28 29
+statement (55)
+    on left: 32 33 34 35 36 37 38 39 40, on right: 31 38 39 40
+statementexpression (56)
+    on left: 41 42, on right: 34
+primary (57)
+    on left: 43 44 45, on right: 50
+argumentlist (58)
+    on left: 46 47, on right: 47 48
+functioninvocation (59)
+    on left: 48 49, on right: 42 45
+postfixexpression (60)
+    on left: 50 51, on right: 54
+unaryexpression (61)
+    on left: 52 53 54, on right: 52 53 55 56 57 58
+multiplicativeexpression (62)
+    on left: 55 56 57 58, on right: 56 57 58 59 60 61
+additiveexpression (63)
+    on left: 59 60 61, on right: 60 61 62 63 64 65 66
+relationalexpression (64)
+    on left: 62 63 64 65 66, on right: 63 64 65 66 67 68 69
+equalityexpression (65)
+    on left: 67 68 69, on right: 68 69 70 71
+conditionalandexpression (66)
+    on left: 70 71, on right: 71 72 73
+conditionalorexpression (67)
+    on left: 72 73, on right: 73 74
+assignmentexpression (68)
+    on left: 74 75, on right: 76 77
+assignment (69)
+    on left: 76, on right: 41 75
+expression (70)
+    on left: 77, on right: 36 38 39 40 44 46 47
+
+
+State 0
+
+    0 $accept: . start END
+
+    ID       shift, and go to state 1
+    BOOLEAN  shift, and go to state 2
+    INT      shift, and go to state 3
+    VOID     shift, and go to state 4
+
+    $default  reduce using rule 1 (start)
+
+    start                    go to state 5
+    type                     go to state 6
+    globaldeclarations       go to state 7
+    globaldeclaration        go to state 8
+    variabledeclaration      go to state 9
+    identifier               go to state 10
+    functiondeclaration      go to state 11
+    functionheader           go to state 12
+    mainfunctiondeclaration  go to state 13
+    mainfunctiondeclarator   go to state 14
+
+
+State 1
+
+   15 identifier: ID .
+
+    $default  reduce using rule 15 (identifier)
+
+
+State 2
+
+    7 type: BOOLEAN .
+
+    $default  reduce using rule 7 (type)
+
+
+State 3
+
+    8 type: INT .
+
+    $default  reduce using rule 8 (type)
+
+
+State 4
+
+   18 functionheader: VOID . functiondeclarator
+
+    ID  shift, and go to state 1
+
+    identifier          go to state 15
+    functiondeclarator  go to state 16
+
+
+State 5
+
+    0 $accept: start . END
+
+    END  shift, and go to state 17
+
+
+State 6
+
+   14 variabledeclaration: type . identifier SEMICOLON
+   17 functionheader: type . functiondeclarator
+
+    ID  shift, and go to state 1
+
+    identifier          go to state 18
+    functiondeclarator  go to state 19
+
+
+State 7
+
+    2 start: globaldeclarations .
+   10 globaldeclarations: globaldeclarations . globaldeclaration
+
+    ID       shift, and go to state 1
+    BOOLEAN  shift, and go to state 2
+    INT      shift, and go to state 3
+    VOID     shift, and go to state 4
+
+    $default  reduce using rule 2 (start)
+
+    type                     go to state 6
+    globaldeclaration        go to state 20
+    variabledeclaration      go to state 9
+    identifier               go to state 10
+    functiondeclaration      go to state 11
+    functionheader           go to state 12
+    mainfunctiondeclaration  go to state 13
+    mainfunctiondeclarator   go to state 14
+
+
+State 8
+
+    9 globaldeclarations: globaldeclaration .
+
+    $default  reduce using rule 9 (globaldeclarations)
+
+
+State 9
+
+   11 globaldeclaration: variabledeclaration .
+
+    $default  reduce using rule 11 (globaldeclaration)
+
+
+State 10
+
+   25 mainfunctiondeclarator: identifier . PARENTHESIS_OPEN PARENTHESIS_CLOSE
+
+    PARENTHESIS_OPEN  shift, and go to state 21
+
+
+State 11
+
+   12 globaldeclaration: functiondeclaration .
+
+    $default  reduce using rule 12 (globaldeclaration)
+
+
+State 12
+
+   16 functiondeclaration: functionheader . block
+
+    BRACE_OPEN  shift, and go to state 22
+
+    block  go to state 23
+
+
+State 13
+
+   13 globaldeclaration: mainfunctiondeclaration .
+
+    $default  reduce using rule 13 (globaldeclaration)
+
+
+State 14
+
+   24 mainfunctiondeclaration: mainfunctiondeclarator . block
+
+    BRACE_OPEN  shift, and go to state 22
+
+    block  go to state 24
+
+
+State 15
+
+   19 functiondeclarator: identifier . PARENTHESIS_OPEN formalparameterlist PARENTHESIS_CLOSE
+   20                   | identifier . PARENTHESIS_OPEN PARENTHESIS_CLOSE
+
+    PARENTHESIS_OPEN  shift, and go to state 25
+
+
+State 16
+
+   18 functionheader: VOID functiondeclarator .
+
+    $default  reduce using rule 18 (functionheader)
+
+
+State 17
+
+    0 $accept: start END .
+
+    $default  accept
+
+
+State 18
+
+   14 variabledeclaration: type identifier . SEMICOLON
+   19 functiondeclarator: identifier . PARENTHESIS_OPEN formalparameterlist PARENTHESIS_CLOSE
+   20                   | identifier . PARENTHESIS_OPEN PARENTHESIS_CLOSE
+
+    PARENTHESIS_OPEN  shift, and go to state 25
+    SEMICOLON         shift, and go to state 26
+
+
+State 19
+
+   17 functionheader: type functiondeclarator .
+
+    $default  reduce using rule 17 (functionheader)
+
+
+State 20
+
+   10 globaldeclarations: globaldeclarations globaldeclaration .
+
+    $default  reduce using rule 10 (globaldeclarations)
+
+
+State 21
+
+   25 mainfunctiondeclarator: identifier PARENTHESIS_OPEN . PARENTHESIS_CLOSE
+
+    PARENTHESIS_CLOSE  shift, and go to state 27
+
+
+State 22
+
+   26 block: BRACE_OPEN . blockstatements BRACE_CLOSE
+   27      | BRACE_OPEN . BRACE_CLOSE
+
+    ID           shift, and go to state 1
+    BOOLEAN      shift, and go to state 2
+    INT          shift, and go to state 3
+    IF           shift, and go to state 28
+    WHILE        shift, and go to state 29
+    RETURN       shift, and go to state 30
+    BREAK        shift, and go to state 31
+    BRACE_OPEN   shift, and go to state 22
+    BRACE_CLOSE  shift, and go to state 32
+    SEMICOLON    shift, and go to state 33
+
+    type                 go to state 34
+    variabledeclaration  go to state 35
+    identifier           go to state 36
+    block                go to state 37
+    blockstatements      go to state 38
+    blockstatement       go to state 39
+    statement            go to state 40
+    statementexpression  go to state 41
+    functioninvocation   go to state 42
+    assignment           go to state 43
+
+
+State 23
+
+   16 functiondeclaration: functionheader block .
+
+    $default  reduce using rule 16 (functiondeclaration)
+
+
+State 24
+
+   24 mainfunctiondeclaration: mainfunctiondeclarator block .
+
+    $default  reduce using rule 24 (mainfunctiondeclaration)
+
+
+State 25
+
+   19 functiondeclarator: identifier PARENTHESIS_OPEN . formalparameterlist PARENTHESIS_CLOSE
+   20                   | identifier PARENTHESIS_OPEN . PARENTHESIS_CLOSE
+
+    BOOLEAN            shift, and go to state 2
+    INT                shift, and go to state 3
+    PARENTHESIS_CLOSE  shift, and go to state 44
+
+    type                 go to state 45
+    formalparameterlist  go to state 46
+    formalparameter      go to state 47
+
+
+State 26
+
+   14 variabledeclaration: type identifier SEMICOLON .
+
+    $default  reduce using rule 14 (variabledeclaration)
+
+
+State 27
+
+   25 mainfunctiondeclarator: identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE .
+
+    $default  reduce using rule 25 (mainfunctiondeclarator)
+
+
+State 28
+
+   38 statement: IF . PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement
+   39          | IF . PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement ELSE statement
+
+    PARENTHESIS_OPEN  shift, and go to state 48
+
+
+State 29
+
+   40 statement: WHILE . PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement
+
+    PARENTHESIS_OPEN  shift, and go to state 49
+
+
+State 30
+
+   36 statement: RETURN . expression SEMICOLON
+   37          | RETURN . SEMICOLON
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+    SEMICOLON         shift, and go to state 57
+
+    literal                   go to state 58
+    identifier                go to state 59
+    primary                   go to state 60
+    functioninvocation        go to state 61
+    postfixexpression         go to state 62
+    unaryexpression           go to state 63
+    multiplicativeexpression  go to state 64
+    additiveexpression        go to state 65
+    relationalexpression      go to state 66
+    equalityexpression        go to state 67
+    conditionalandexpression  go to state 68
+    conditionalorexpression   go to state 69
+    assignmentexpression      go to state 70
+    assignment                go to state 71
+    expression                go to state 72
+
+
+State 31
+
+   35 statement: BREAK . SEMICOLON
+
+    SEMICOLON  shift, and go to state 73
+
+
+State 32
+
+   27 block: BRACE_OPEN BRACE_CLOSE .
+
+    $default  reduce using rule 27 (block)
+
+
+State 33
+
+   33 statement: SEMICOLON .
+
+    $default  reduce using rule 33 (statement)
+
+
+State 34
+
+   14 variabledeclaration: type . identifier SEMICOLON
+
+    ID  shift, and go to state 1
+
+    identifier  go to state 74
+
+
+State 35
+
+   30 blockstatement: variabledeclaration .
+
+    $default  reduce using rule 30 (blockstatement)
+
+
+State 36
+
+   48 functioninvocation: identifier . PARENTHESIS_OPEN argumentlist PARENTHESIS_CLOSE
+   49                   | identifier . PARENTHESIS_OPEN PARENTHESIS_CLOSE
+   76 assignment: identifier . ASSIGNMENT assignmentexpression
+
+    ASSIGNMENT        shift, and go to state 75
+    PARENTHESIS_OPEN  shift, and go to state 76
+
+
+State 37
+
+   32 statement: block .
+
+    $default  reduce using rule 32 (statement)
+
+
+State 38
+
+   26 block: BRACE_OPEN blockstatements . BRACE_CLOSE
+   29 blockstatements: blockstatements . blockstatement
+
+    ID           shift, and go to state 1
+    BOOLEAN      shift, and go to state 2
+    INT          shift, and go to state 3
+    IF           shift, and go to state 28
+    WHILE        shift, and go to state 29
+    RETURN       shift, and go to state 30
+    BREAK        shift, and go to state 31
+    BRACE_OPEN   shift, and go to state 22
+    BRACE_CLOSE  shift, and go to state 77
+    SEMICOLON    shift, and go to state 33
+
+    type                 go to state 34
+    variabledeclaration  go to state 35
+    identifier           go to state 36
+    block                go to state 37
+    blockstatement       go to state 78
+    statement            go to state 40
+    statementexpression  go to state 41
+    functioninvocation   go to state 42
+    assignment           go to state 43
+
+
+State 39
+
+   28 blockstatements: blockstatement .
+
+    $default  reduce using rule 28 (blockstatements)
+
+
+State 40
+
+   31 blockstatement: statement .
+
+    $default  reduce using rule 31 (blockstatement)
+
+
+State 41
+
+   34 statement: statementexpression . SEMICOLON
+
+    SEMICOLON  shift, and go to state 79
+
+
+State 42
+
+   42 statementexpression: functioninvocation .
+
+    $default  reduce using rule 42 (statementexpression)
+
+
+State 43
+
+   41 statementexpression: assignment .
+
+    $default  reduce using rule 41 (statementexpression)
+
+
+State 44
+
+   20 functiondeclarator: identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE .
+
+    $default  reduce using rule 20 (functiondeclarator)
+
+
+State 45
+
+   23 formalparameter: type . identifier
+
+    ID  shift, and go to state 1
+
+    identifier  go to state 80
+
+
+State 46
+
+   19 functiondeclarator: identifier PARENTHESIS_OPEN formalparameterlist . PARENTHESIS_CLOSE
+   22 formalparameterlist: formalparameterlist . COMMA formalparameter
+
+    PARENTHESIS_CLOSE  shift, and go to state 81
+    COMMA              shift, and go to state 82
+
+
+State 47
+
+   21 formalparameterlist: formalparameter .
+
+    $default  reduce using rule 21 (formalparameterlist)
+
+
+State 48
+
+   38 statement: IF PARENTHESIS_OPEN . expression PARENTHESIS_CLOSE statement
+   39          | IF PARENTHESIS_OPEN . expression PARENTHESIS_CLOSE statement ELSE statement
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal                   go to state 58
+    identifier                go to state 59
+    primary                   go to state 60
+    functioninvocation        go to state 61
+    postfixexpression         go to state 62
+    unaryexpression           go to state 63
+    multiplicativeexpression  go to state 64
+    additiveexpression        go to state 65
+    relationalexpression      go to state 66
+    equalityexpression        go to state 67
+    conditionalandexpression  go to state 68
+    conditionalorexpression   go to state 69
+    assignmentexpression      go to state 70
+    assignment                go to state 71
+    expression                go to state 83
+
+
+State 49
+
+   40 statement: WHILE PARENTHESIS_OPEN . expression PARENTHESIS_CLOSE statement
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal                   go to state 58
+    identifier                go to state 59
+    primary                   go to state 60
+    functioninvocation        go to state 61
+    postfixexpression         go to state 62
+    unaryexpression           go to state 63
+    multiplicativeexpression  go to state 64
+    additiveexpression        go to state 65
+    relationalexpression      go to state 66
+    equalityexpression        go to state 67
+    conditionalandexpression  go to state 68
+    conditionalorexpression   go to state 69
+    assignmentexpression      go to state 70
+    assignment                go to state 71
+    expression                go to state 84
+
+
+State 50
+
+    3 literal: NUMBER .
+
+    $default  reduce using rule 3 (literal)
+
+
+State 51
+
+    4 literal: STRING_LITERAL .
+
+    $default  reduce using rule 4 (literal)
+
+
+State 52
+
+    5 literal: TRUE .
+
+    $default  reduce using rule 5 (literal)
+
+
+State 53
+
+    6 literal: FALSE .
+
+    $default  reduce using rule 6 (literal)
+
+
+State 54
+
+   52 unaryexpression: MINUS . unaryexpression
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal             go to state 58
+    identifier          go to state 85
+    primary             go to state 60
+    functioninvocation  go to state 61
+    postfixexpression   go to state 62
+    unaryexpression     go to state 86
+
+
+State 55
+
+   53 unaryexpression: NOT . unaryexpression
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal             go to state 58
+    identifier          go to state 85
+    primary             go to state 60
+    functioninvocation  go to state 61
+    postfixexpression   go to state 62
+    unaryexpression     go to state 87
+
+
+State 56
+
+   44 primary: PARENTHESIS_OPEN . expression PARENTHESIS_CLOSE
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal                   go to state 58
+    identifier                go to state 59
+    primary                   go to state 60
+    functioninvocation        go to state 61
+    postfixexpression         go to state 62
+    unaryexpression           go to state 63
+    multiplicativeexpression  go to state 64
+    additiveexpression        go to state 65
+    relationalexpression      go to state 66
+    equalityexpression        go to state 67
+    conditionalandexpression  go to state 68
+    conditionalorexpression   go to state 69
+    assignmentexpression      go to state 70
+    assignment                go to state 71
+    expression                go to state 88
+
+
+State 57
+
+   37 statement: RETURN SEMICOLON .
+
+    $default  reduce using rule 37 (statement)
+
+
+State 58
+
+   43 primary: literal .
+
+    $default  reduce using rule 43 (primary)
+
+
+State 59
+
+   48 functioninvocation: identifier . PARENTHESIS_OPEN argumentlist PARENTHESIS_CLOSE
+   49                   | identifier . PARENTHESIS_OPEN PARENTHESIS_CLOSE
+   51 postfixexpression: identifier .
+   76 assignment: identifier . ASSIGNMENT assignmentexpression
+
+    ASSIGNMENT        shift, and go to state 75
+    PARENTHESIS_OPEN  shift, and go to state 76
+
+    $default  reduce using rule 51 (postfixexpression)
+
+
+State 60
+
+   50 postfixexpression: primary .
+
+    $default  reduce using rule 50 (postfixexpression)
+
+
+State 61
+
+   45 primary: functioninvocation .
+
+    $default  reduce using rule 45 (primary)
+
+
+State 62
+
+   54 unaryexpression: postfixexpression .
+
+    $default  reduce using rule 54 (unaryexpression)
+
+
+State 63
+
+   55 multiplicativeexpression: unaryexpression .
+
+    $default  reduce using rule 55 (multiplicativeexpression)
+
+
+State 64
+
+   56 multiplicativeexpression: multiplicativeexpression . MULTIPLY unaryexpression
+   57                         | multiplicativeexpression . DIVIDE unaryexpression
+   58                         | multiplicativeexpression . MODULO unaryexpression
+   59 additiveexpression: multiplicativeexpression .
+
+    MULTIPLY  shift, and go to state 89
+    DIVIDE    shift, and go to state 90
+    MODULO    shift, and go to state 91
+
+    $default  reduce using rule 59 (additiveexpression)
+
+
+State 65
+
+   60 additiveexpression: additiveexpression . PLUS multiplicativeexpression
+   61                   | additiveexpression . MINUS multiplicativeexpression
+   62 relationalexpression: additiveexpression .
+
+    PLUS   shift, and go to state 92
+    MINUS  shift, and go to state 93
+
+    $default  reduce using rule 62 (relationalexpression)
+
+
+State 66
+
+   63 relationalexpression: relationalexpression . LT additiveexpression
+   64                     | relationalexpression . GT additiveexpression
+   65                     | relationalexpression . LE additiveexpression
+   66                     | relationalexpression . GE additiveexpression
+   67 equalityexpression: relationalexpression .
+
+    LT  shift, and go to state 94
+    GT  shift, and go to state 95
+    GE  shift, and go to state 96
+    LE  shift, and go to state 97
+
+    $default  reduce using rule 67 (equalityexpression)
+
+
+State 67
+
+   68 equalityexpression: equalityexpression . EQ relationalexpression
+   69                   | equalityexpression . NE relationalexpression
+   70 conditionalandexpression: equalityexpression .
+
+    EQ  shift, and go to state 98
+    NE  shift, and go to state 99
+
+    $default  reduce using rule 70 (conditionalandexpression)
+
+
+State 68
+
+   71 conditionalandexpression: conditionalandexpression . AND equalityexpression
+   72 conditionalorexpression: conditionalandexpression .
+
+    AND  shift, and go to state 100
+
+    $default  reduce using rule 72 (conditionalorexpression)
+
+
+State 69
+
+   73 conditionalorexpression: conditionalorexpression . OR conditionalandexpression
+   74 assignmentexpression: conditionalorexpression .
+
+    OR  shift, and go to state 101
+
+    $default  reduce using rule 74 (assignmentexpression)
+
+
+State 70
+
+   77 expression: assignmentexpression .
+
+    $default  reduce using rule 77 (expression)
+
+
+State 71
+
+   75 assignmentexpression: assignment .
+
+    $default  reduce using rule 75 (assignmentexpression)
+
+
+State 72
+
+   36 statement: RETURN expression . SEMICOLON
+
+    SEMICOLON  shift, and go to state 102
+
+
+State 73
+
+   35 statement: BREAK SEMICOLON .
+
+    $default  reduce using rule 35 (statement)
+
+
+State 74
+
+   14 variabledeclaration: type identifier . SEMICOLON
+
+    SEMICOLON  shift, and go to state 26
+
+
+State 75
+
+   76 assignment: identifier ASSIGNMENT . assignmentexpression
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal                   go to state 58
+    identifier                go to state 59
+    primary                   go to state 60
+    functioninvocation        go to state 61
+    postfixexpression         go to state 62
+    unaryexpression           go to state 63
+    multiplicativeexpression  go to state 64
+    additiveexpression        go to state 65
+    relationalexpression      go to state 66
+    equalityexpression        go to state 67
+    conditionalandexpression  go to state 68
+    conditionalorexpression   go to state 69
+    assignmentexpression      go to state 103
+    assignment                go to state 71
+
+
+State 76
+
+   48 functioninvocation: identifier PARENTHESIS_OPEN . argumentlist PARENTHESIS_CLOSE
+   49                   | identifier PARENTHESIS_OPEN . PARENTHESIS_CLOSE
+
+    ID                 shift, and go to state 1
+    NUMBER             shift, and go to state 50
+    STRING_LITERAL     shift, and go to state 51
+    TRUE               shift, and go to state 52
+    FALSE              shift, and go to state 53
+    MINUS              shift, and go to state 54
+    NOT                shift, and go to state 55
+    PARENTHESIS_OPEN   shift, and go to state 56
+    PARENTHESIS_CLOSE  shift, and go to state 104
+
+    literal                   go to state 58
+    identifier                go to state 59
+    primary                   go to state 60
+    argumentlist              go to state 105
+    functioninvocation        go to state 61
+    postfixexpression         go to state 62
+    unaryexpression           go to state 63
+    multiplicativeexpression  go to state 64
+    additiveexpression        go to state 65
+    relationalexpression      go to state 66
+    equalityexpression        go to state 67
+    conditionalandexpression  go to state 68
+    conditionalorexpression   go to state 69
+    assignmentexpression      go to state 70
+    assignment                go to state 71
+    expression                go to state 106
+
+
+State 77
+
+   26 block: BRACE_OPEN blockstatements BRACE_CLOSE .
+
+    $default  reduce using rule 26 (block)
+
+
+State 78
+
+   29 blockstatements: blockstatements blockstatement .
+
+    $default  reduce using rule 29 (blockstatements)
+
+
+State 79
+
+   34 statement: statementexpression SEMICOLON .
+
+    $default  reduce using rule 34 (statement)
+
+
+State 80
+
+   23 formalparameter: type identifier .
+
+    $default  reduce using rule 23 (formalparameter)
+
+
+State 81
+
+   19 functiondeclarator: identifier PARENTHESIS_OPEN formalparameterlist PARENTHESIS_CLOSE .
+
+    $default  reduce using rule 19 (functiondeclarator)
+
+
+State 82
+
+   22 formalparameterlist: formalparameterlist COMMA . formalparameter
+
+    BOOLEAN  shift, and go to state 2
+    INT      shift, and go to state 3
+
+    type             go to state 45
+    formalparameter  go to state 107
+
+
+State 83
+
+   38 statement: IF PARENTHESIS_OPEN expression . PARENTHESIS_CLOSE statement
+   39          | IF PARENTHESIS_OPEN expression . PARENTHESIS_CLOSE statement ELSE statement
+
+    PARENTHESIS_CLOSE  shift, and go to state 108
+
+
+State 84
+
+   40 statement: WHILE PARENTHESIS_OPEN expression . PARENTHESIS_CLOSE statement
+
+    PARENTHESIS_CLOSE  shift, and go to state 109
+
+
+State 85
+
+   48 functioninvocation: identifier . PARENTHESIS_OPEN argumentlist PARENTHESIS_CLOSE
+   49                   | identifier . PARENTHESIS_OPEN PARENTHESIS_CLOSE
+   51 postfixexpression: identifier .
+
+    PARENTHESIS_OPEN  shift, and go to state 76
+
+    $default  reduce using rule 51 (postfixexpression)
+
+
+State 86
+
+   52 unaryexpression: MINUS unaryexpression .
+
+    $default  reduce using rule 52 (unaryexpression)
+
+
+State 87
+
+   53 unaryexpression: NOT unaryexpression .
+
+    $default  reduce using rule 53 (unaryexpression)
+
+
+State 88
+
+   44 primary: PARENTHESIS_OPEN expression . PARENTHESIS_CLOSE
+
+    PARENTHESIS_CLOSE  shift, and go to state 110
+
+
+State 89
+
+   56 multiplicativeexpression: multiplicativeexpression MULTIPLY . unaryexpression
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal             go to state 58
+    identifier          go to state 85
+    primary             go to state 60
+    functioninvocation  go to state 61
+    postfixexpression   go to state 62
+    unaryexpression     go to state 111
+
+
+State 90
+
+   57 multiplicativeexpression: multiplicativeexpression DIVIDE . unaryexpression
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal             go to state 58
+    identifier          go to state 85
+    primary             go to state 60
+    functioninvocation  go to state 61
+    postfixexpression   go to state 62
+    unaryexpression     go to state 112
+
+
+State 91
+
+   58 multiplicativeexpression: multiplicativeexpression MODULO . unaryexpression
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal             go to state 58
+    identifier          go to state 85
+    primary             go to state 60
+    functioninvocation  go to state 61
+    postfixexpression   go to state 62
+    unaryexpression     go to state 113
+
+
+State 92
+
+   60 additiveexpression: additiveexpression PLUS . multiplicativeexpression
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal                   go to state 58
+    identifier                go to state 85
+    primary                   go to state 60
+    functioninvocation        go to state 61
+    postfixexpression         go to state 62
+    unaryexpression           go to state 63
+    multiplicativeexpression  go to state 114
+
+
+State 93
+
+   61 additiveexpression: additiveexpression MINUS . multiplicativeexpression
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal                   go to state 58
+    identifier                go to state 85
+    primary                   go to state 60
+    functioninvocation        go to state 61
+    postfixexpression         go to state 62
+    unaryexpression           go to state 63
+    multiplicativeexpression  go to state 115
+
+
+State 94
+
+   63 relationalexpression: relationalexpression LT . additiveexpression
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal                   go to state 58
+    identifier                go to state 85
+    primary                   go to state 60
+    functioninvocation        go to state 61
+    postfixexpression         go to state 62
+    unaryexpression           go to state 63
+    multiplicativeexpression  go to state 64
+    additiveexpression        go to state 116
+
+
+State 95
+
+   64 relationalexpression: relationalexpression GT . additiveexpression
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal                   go to state 58
+    identifier                go to state 85
+    primary                   go to state 60
+    functioninvocation        go to state 61
+    postfixexpression         go to state 62
+    unaryexpression           go to state 63
+    multiplicativeexpression  go to state 64
+    additiveexpression        go to state 117
+
+
+State 96
+
+   66 relationalexpression: relationalexpression GE . additiveexpression
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal                   go to state 58
+    identifier                go to state 85
+    primary                   go to state 60
+    functioninvocation        go to state 61
+    postfixexpression         go to state 62
+    unaryexpression           go to state 63
+    multiplicativeexpression  go to state 64
+    additiveexpression        go to state 118
+
+
+State 97
+
+   65 relationalexpression: relationalexpression LE . additiveexpression
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal                   go to state 58
+    identifier                go to state 85
+    primary                   go to state 60
+    functioninvocation        go to state 61
+    postfixexpression         go to state 62
+    unaryexpression           go to state 63
+    multiplicativeexpression  go to state 64
+    additiveexpression        go to state 119
+
+
+State 98
+
+   68 equalityexpression: equalityexpression EQ . relationalexpression
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal                   go to state 58
+    identifier                go to state 85
+    primary                   go to state 60
+    functioninvocation        go to state 61
+    postfixexpression         go to state 62
+    unaryexpression           go to state 63
+    multiplicativeexpression  go to state 64
+    additiveexpression        go to state 65
+    relationalexpression      go to state 120
+
+
+State 99
+
+   69 equalityexpression: equalityexpression NE . relationalexpression
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal                   go to state 58
+    identifier                go to state 85
+    primary                   go to state 60
+    functioninvocation        go to state 61
+    postfixexpression         go to state 62
+    unaryexpression           go to state 63
+    multiplicativeexpression  go to state 64
+    additiveexpression        go to state 65
+    relationalexpression      go to state 121
+
+
+State 100
+
+   71 conditionalandexpression: conditionalandexpression AND . equalityexpression
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal                   go to state 58
+    identifier                go to state 85
+    primary                   go to state 60
+    functioninvocation        go to state 61
+    postfixexpression         go to state 62
+    unaryexpression           go to state 63
+    multiplicativeexpression  go to state 64
+    additiveexpression        go to state 65
+    relationalexpression      go to state 66
+    equalityexpression        go to state 122
+
+
+State 101
+
+   73 conditionalorexpression: conditionalorexpression OR . conditionalandexpression
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal                   go to state 58
+    identifier                go to state 85
+    primary                   go to state 60
+    functioninvocation        go to state 61
+    postfixexpression         go to state 62
+    unaryexpression           go to state 63
+    multiplicativeexpression  go to state 64
+    additiveexpression        go to state 65
+    relationalexpression      go to state 66
+    equalityexpression        go to state 67
+    conditionalandexpression  go to state 123
+
+
+State 102
+
+   36 statement: RETURN expression SEMICOLON .
+
+    $default  reduce using rule 36 (statement)
+
+
+State 103
+
+   76 assignment: identifier ASSIGNMENT assignmentexpression .
+
+    $default  reduce using rule 76 (assignment)
+
+
+State 104
+
+   49 functioninvocation: identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE .
+
+    $default  reduce using rule 49 (functioninvocation)
+
+
+State 105
+
+   47 argumentlist: argumentlist . COMMA expression
+   48 functioninvocation: identifier PARENTHESIS_OPEN argumentlist . PARENTHESIS_CLOSE
+
+    PARENTHESIS_CLOSE  shift, and go to state 124
+    COMMA              shift, and go to state 125
+
+
+State 106
+
+   46 argumentlist: expression .
+
+    $default  reduce using rule 46 (argumentlist)
+
+
+State 107
+
+   22 formalparameterlist: formalparameterlist COMMA formalparameter .
+
+    $default  reduce using rule 22 (formalparameterlist)
+
+
+State 108
+
+   38 statement: IF PARENTHESIS_OPEN expression PARENTHESIS_CLOSE . statement
+   39          | IF PARENTHESIS_OPEN expression PARENTHESIS_CLOSE . statement ELSE statement
+
+    ID          shift, and go to state 1
+    IF          shift, and go to state 28
+    WHILE       shift, and go to state 29
+    RETURN      shift, and go to state 30
+    BREAK       shift, and go to state 31
+    BRACE_OPEN  shift, and go to state 22
+    SEMICOLON   shift, and go to state 33
+
+    identifier           go to state 36
+    block                go to state 37
+    statement            go to state 126
+    statementexpression  go to state 41
+    functioninvocation   go to state 42
+    assignment           go to state 43
+
+
+State 109
+
+   40 statement: WHILE PARENTHESIS_OPEN expression PARENTHESIS_CLOSE . statement
+
+    ID          shift, and go to state 1
+    IF          shift, and go to state 28
+    WHILE       shift, and go to state 29
+    RETURN      shift, and go to state 30
+    BREAK       shift, and go to state 31
+    BRACE_OPEN  shift, and go to state 22
+    SEMICOLON   shift, and go to state 33
+
+    identifier           go to state 36
+    block                go to state 37
+    statement            go to state 127
+    statementexpression  go to state 41
+    functioninvocation   go to state 42
+    assignment           go to state 43
+
+
+State 110
+
+   44 primary: PARENTHESIS_OPEN expression PARENTHESIS_CLOSE .
+
+    $default  reduce using rule 44 (primary)
+
+
+State 111
+
+   56 multiplicativeexpression: multiplicativeexpression MULTIPLY unaryexpression .
+
+    $default  reduce using rule 56 (multiplicativeexpression)
+
+
+State 112
+
+   57 multiplicativeexpression: multiplicativeexpression DIVIDE unaryexpression .
+
+    $default  reduce using rule 57 (multiplicativeexpression)
+
+
+State 113
+
+   58 multiplicativeexpression: multiplicativeexpression MODULO unaryexpression .
+
+    $default  reduce using rule 58 (multiplicativeexpression)
+
+
+State 114
+
+   56 multiplicativeexpression: multiplicativeexpression . MULTIPLY unaryexpression
+   57                         | multiplicativeexpression . DIVIDE unaryexpression
+   58                         | multiplicativeexpression . MODULO unaryexpression
+   60 additiveexpression: additiveexpression PLUS multiplicativeexpression .
+
+    MULTIPLY  shift, and go to state 89
+    DIVIDE    shift, and go to state 90
+    MODULO    shift, and go to state 91
+
+    $default  reduce using rule 60 (additiveexpression)
+
+
+State 115
+
+   56 multiplicativeexpression: multiplicativeexpression . MULTIPLY unaryexpression
+   57                         | multiplicativeexpression . DIVIDE unaryexpression
+   58                         | multiplicativeexpression . MODULO unaryexpression
+   61 additiveexpression: additiveexpression MINUS multiplicativeexpression .
+
+    MULTIPLY  shift, and go to state 89
+    DIVIDE    shift, and go to state 90
+    MODULO    shift, and go to state 91
+
+    $default  reduce using rule 61 (additiveexpression)
+
+
+State 116
+
+   60 additiveexpression: additiveexpression . PLUS multiplicativeexpression
+   61                   | additiveexpression . MINUS multiplicativeexpression
+   63 relationalexpression: relationalexpression LT additiveexpression .
+
+    PLUS   shift, and go to state 92
+    MINUS  shift, and go to state 93
+
+    $default  reduce using rule 63 (relationalexpression)
+
+
+State 117
+
+   60 additiveexpression: additiveexpression . PLUS multiplicativeexpression
+   61                   | additiveexpression . MINUS multiplicativeexpression
+   64 relationalexpression: relationalexpression GT additiveexpression .
+
+    PLUS   shift, and go to state 92
+    MINUS  shift, and go to state 93
+
+    $default  reduce using rule 64 (relationalexpression)
+
+
+State 118
+
+   60 additiveexpression: additiveexpression . PLUS multiplicativeexpression
+   61                   | additiveexpression . MINUS multiplicativeexpression
+   66 relationalexpression: relationalexpression GE additiveexpression .
+
+    PLUS   shift, and go to state 92
+    MINUS  shift, and go to state 93
+
+    $default  reduce using rule 66 (relationalexpression)
+
+
+State 119
+
+   60 additiveexpression: additiveexpression . PLUS multiplicativeexpression
+   61                   | additiveexpression . MINUS multiplicativeexpression
+   65 relationalexpression: relationalexpression LE additiveexpression .
+
+    PLUS   shift, and go to state 92
+    MINUS  shift, and go to state 93
+
+    $default  reduce using rule 65 (relationalexpression)
+
+
+State 120
+
+   63 relationalexpression: relationalexpression . LT additiveexpression
+   64                     | relationalexpression . GT additiveexpression
+   65                     | relationalexpression . LE additiveexpression
+   66                     | relationalexpression . GE additiveexpression
+   68 equalityexpression: equalityexpression EQ relationalexpression .
+
+    LT  shift, and go to state 94
+    GT  shift, and go to state 95
+    GE  shift, and go to state 96
+    LE  shift, and go to state 97
+
+    $default  reduce using rule 68 (equalityexpression)
+
+
+State 121
+
+   63 relationalexpression: relationalexpression . LT additiveexpression
+   64                     | relationalexpression . GT additiveexpression
+   65                     | relationalexpression . LE additiveexpression
+   66                     | relationalexpression . GE additiveexpression
+   69 equalityexpression: equalityexpression NE relationalexpression .
+
+    LT  shift, and go to state 94
+    GT  shift, and go to state 95
+    GE  shift, and go to state 96
+    LE  shift, and go to state 97
+
+    $default  reduce using rule 69 (equalityexpression)
+
+
+State 122
+
+   68 equalityexpression: equalityexpression . EQ relationalexpression
+   69                   | equalityexpression . NE relationalexpression
+   71 conditionalandexpression: conditionalandexpression AND equalityexpression .
+
+    EQ  shift, and go to state 98
+    NE  shift, and go to state 99
+
+    $default  reduce using rule 71 (conditionalandexpression)
+
+
+State 123
+
+   71 conditionalandexpression: conditionalandexpression . AND equalityexpression
+   73 conditionalorexpression: conditionalorexpression OR conditionalandexpression .
+
+    AND  shift, and go to state 100
+
+    $default  reduce using rule 73 (conditionalorexpression)
+
+
+State 124
+
+   48 functioninvocation: identifier PARENTHESIS_OPEN argumentlist PARENTHESIS_CLOSE .
+
+    $default  reduce using rule 48 (functioninvocation)
+
+
+State 125
+
+   47 argumentlist: argumentlist COMMA . expression
+
+    ID                shift, and go to state 1
+    NUMBER            shift, and go to state 50
+    STRING_LITERAL    shift, and go to state 51
+    TRUE              shift, and go to state 52
+    FALSE             shift, and go to state 53
+    MINUS             shift, and go to state 54
+    NOT               shift, and go to state 55
+    PARENTHESIS_OPEN  shift, and go to state 56
+
+    literal                   go to state 58
+    identifier                go to state 59
+    primary                   go to state 60
+    functioninvocation        go to state 61
+    postfixexpression         go to state 62
+    unaryexpression           go to state 63
+    multiplicativeexpression  go to state 64
+    additiveexpression        go to state 65
+    relationalexpression      go to state 66
+    equalityexpression        go to state 67
+    conditionalandexpression  go to state 68
+    conditionalorexpression   go to state 69
+    assignmentexpression      go to state 70
+    assignment                go to state 71
+    expression                go to state 128
+
+
+State 126
+
+   38 statement: IF PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement .
+   39          | IF PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement . ELSE statement
+
+    ELSE  shift, and go to state 129
+
+    ELSE      [reduce using rule 38 (statement)]
+    $default  reduce using rule 38 (statement)
+
+
+State 127
+
+   40 statement: WHILE PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement .
+
+    $default  reduce using rule 40 (statement)
+
+
+State 128
+
+   47 argumentlist: argumentlist COMMA expression .
+
+    $default  reduce using rule 47 (argumentlist)
+
+
+State 129
+
+   39 statement: IF PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement ELSE . statement
+
+    ID          shift, and go to state 1
+    IF          shift, and go to state 28
+    WHILE       shift, and go to state 29
+    RETURN      shift, and go to state 30
+    BREAK       shift, and go to state 31
+    BRACE_OPEN  shift, and go to state 22
+    SEMICOLON   shift, and go to state 33
+
+    identifier           go to state 36
+    block                go to state 37
+    statement            go to state 130
+    statementexpression  go to state 41
+    functioninvocation   go to state 42
+    assignment           go to state 43
+
+
+State 130
+
+   39 statement: IF PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement ELSE statement .
+
+    $default  reduce using rule 39 (statement)

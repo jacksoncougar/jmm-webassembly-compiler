@@ -39,6 +39,12 @@
 
 #ifndef YY_YY_HOME_UGC_JACKSON_WIEBE1_CPSC411_MS1_SRC_PARSER_HPP_INCLUDED
 # define YY_YY_HOME_UGC_JACKSON_WIEBE1_CPSC411_MS1_SRC_PARSER_HPP_INCLUDED
+// //                    "%code requires" blocks.
+#line 18 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:379
+
+#include "ast.hpp"
+
+#line 48 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.hpp" // lalr1.cc:379
 
 
 # include <cstdlib> // std::abort
@@ -47,7 +53,7 @@
 # include <string>
 # include <vector>
 # include "stack.hh"
-
+# include "location.hh"
 
 
 #ifndef YY_ATTRIBUTE
@@ -105,12 +111,12 @@
 
 /* Debug traces.  */
 #ifndef YYDEBUG
-# define YYDEBUG 0
+# define YYDEBUG 1
 #endif
 
 
 namespace yy {
-#line 114 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.hpp" // lalr1.cc:379
+#line 120 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.hpp" // lalr1.cc:379
 
 
 
@@ -124,21 +130,23 @@ namespace yy {
     /// Symbol semantic values.
     union semantic_type
     {
-    #line 30 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:379
+    #line 46 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.ypp" // lalr1.cc:379
 
-  struct ast *a;
-  double d;
+        ASTNodeBase *a;
 
-#line 133 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.hpp" // lalr1.cc:379
+#line 138 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.hpp" // lalr1.cc:379
     };
 #else
     typedef YYSTYPE semantic_type;
 #endif
+    /// Symbol locations.
+    typedef location location_type;
 
     /// Syntax errors thrown from user actions.
     struct syntax_error : std::runtime_error
     {
-      syntax_error (const std::string& m);
+      syntax_error (const location_type& l, const std::string& m);
+      location_type location;
     };
 
     /// Tokens.
@@ -154,34 +162,33 @@ namespace yy {
         FALSE = 262,
         BOOLEAN = 263,
         INT = 264,
-        DECIMAL = 265,
-        AND = 266,
-        OR = 267,
-        IF = 268,
-        ELSE = 269,
-        WHILE = 270,
-        VOID = 271,
-        RETURN = 272,
-        BREAK = 273,
-        PLUS = 274,
-        MINUS = 275,
-        MULTIPLY = 276,
-        DIVIDE = 277,
-        MODULO = 278,
-        ASSIGNMENT = 279,
-        NOT = 280,
-        LT = 281,
-        GT = 282,
-        GE = 283,
-        LE = 284,
-        EQ = 285,
-        NE = 286,
-        PARENTHESIS_OPEN = 287,
-        PARENTHESIS_CLOSE = 288,
-        BRACE_OPEN = 289,
-        BRACE_CLOSE = 290,
-        SEMICOLON = 291,
-        COMMA = 292
+        PLUS = 265,
+        MINUS = 266,
+        MULTIPLY = 267,
+        DIVIDE = 268,
+        MODULO = 269,
+        AND = 270,
+        OR = 271,
+        IF = 272,
+        ELSE = 273,
+        WHILE = 274,
+        VOID = 275,
+        RETURN = 276,
+        BREAK = 277,
+        ASSIGNMENT = 278,
+        NOT = 279,
+        LT = 280,
+        GT = 281,
+        GE = 282,
+        LE = 283,
+        EQ = 284,
+        NE = 285,
+        PARENTHESIS_OPEN = 286,
+        PARENTHESIS_CLOSE = 287,
+        BRACE_OPEN = 288,
+        BRACE_CLOSE = 289,
+        SEMICOLON = 290,
+        COMMA = 291
       };
     };
 
@@ -202,7 +209,7 @@ namespace yy {
     /// Expects its Base type to provide access to the symbol type
     /// via type_get().
     ///
-    /// Provide access to semantic value.
+    /// Provide access to semantic value and location.
     template <typename Base>
     struct basic_symbol : Base
     {
@@ -216,11 +223,13 @@ namespace yy {
       basic_symbol (const basic_symbol& other);
 
       /// Constructor for valueless symbols.
-      basic_symbol (typename Base::kind_type t);
+      basic_symbol (typename Base::kind_type t,
+                    const location_type& l);
 
       /// Constructor for symbols with semantic value.
       basic_symbol (typename Base::kind_type t,
-                    const semantic_type& v);
+                    const semantic_type& v,
+                    const location_type& l);
 
       /// Destroy the symbol.
       ~basic_symbol ();
@@ -236,6 +245,9 @@ namespace yy {
 
       /// The semantic value.
       semantic_type value;
+
+      /// The location.
+      location_type location;
 
     private:
       /// Assignment operator.
@@ -303,8 +315,9 @@ namespace yy {
 #endif
 
     /// Report a syntax error.
+    /// \param loc    where the syntax error is found.
     /// \param msg    a description of the syntax error.
-    virtual void error (const std::string& msg);
+    virtual void error (const location_type& loc, const std::string& msg);
 
     /// Report a syntax error.
     void error (const syntax_error& err);
@@ -363,7 +376,7 @@ namespace yy {
   // number is the opposite.  If YYTABLE_NINF, syntax error.
   static const unsigned char yytable_[];
 
-  static const unsigned char yycheck_[];
+  static const short int yycheck_[];
 
   // YYSTOS[STATE-NUM] -- The (internal number of the) accessing
   // symbol of state STATE-NUM.
@@ -384,7 +397,7 @@ namespace yy {
     static const char* const yytname_[];
 #if YYDEBUG
   // YYRLINE[YYN] -- Source line where rule number YYN was defined.
-  static const unsigned char yyrline_[];
+  static const unsigned short int yyrline_[];
     /// Report on the debug stream that the rule \a r is going to be reduced.
     virtual void yy_reduce_print_ (int r);
     /// Print the state stack on the debug stream.
@@ -485,12 +498,12 @@ namespace yy {
     enum
     {
       yyeof_ = 0,
-      yylast_ = 163,     ///< Last index in yytable_.
+      yylast_ = 176,     ///< Last index in yytable_.
       yynnts_ = 34,  ///< Number of nonterminal symbols.
       yyfinal_ = 17, ///< Termination state number.
       yyterror_ = 1,
       yyerrcode_ = 256,
-      yyntokens_ = 53  ///< Number of tokens.
+      yyntokens_ = 37  ///< Number of tokens.
     };
 
 
@@ -501,7 +514,7 @@ namespace yy {
 
 
 } // yy
-#line 505 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.hpp" // lalr1.cc:379
+#line 518 "/home/ugc/jackson.wiebe1/cpsc411/ms1/src/parser.hpp" // lalr1.cc:379
 
 
 

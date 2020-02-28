@@ -1,0 +1,22 @@
+main() 
+{
+    // same levels
+    return 1 + 2 + 3;
+    return 1 - 2 - 3;
+    return 1 + 2 - 3;
+    return 1 - 2 + 3;
+
+    return 1 * 2 * 3;
+    return 1 / 2 / 3;
+    return 1 / 2 * 3;
+    return 1 * 2 / 3;
+
+    // mixed
+    return 1 + 2 * 3; // 1 + (2 * 3)
+    return 1 - 2 / 3; // 1 - (2 / 3);
+
+    return 1 * 2 + 3; // (1 * 2) + 3;
+    return 1 / 2 - 3; // (1 / 2) - 3;
+
+    return 1 + 2 < 3 * 3; // (1 + 2) < (3 * 3)
+}
