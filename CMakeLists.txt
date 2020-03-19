@@ -47,7 +47,7 @@ target_link_libraries(parser bison_flex)
 
 target_compile_options(parser PRIVATE -Wall)
 
-file(GLOB_RECURSE TEST_FILES tests/ms2/*.txt TEST/ms2/*.t??)
+file(GLOB_RECURSE TEST_FILES tests/ms2/*.txt TEST/ms2/*.t??  TEST/ms2/*.t?)
 set(VAR 0)
 add_custom_target(ALLTEST)
 foreach(test ${TEST_FILES})
