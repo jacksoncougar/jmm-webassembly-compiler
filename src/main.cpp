@@ -3,15 +3,12 @@
  *   All rights reserved.
  */
 
-#include <stdio.h>
 #include <iostream>
 #include <fstream>
-#include <iomanip>
-#include <memory>
 
+#include "scope_stack.hpp"
 #include "tokens.h"
 #include "driver.h"
-#include "parser.hpp"
 
 int main(int argc, char **argv)
 {
@@ -35,6 +32,14 @@ int main(int argc, char **argv)
         yy::Driver driver;
         driver.streamname = argv[1]; // for printing errors 
         driver.parse_stream(ifs);
+
+        // semantic checking...
+        ScopeStack scopes;
+        scopes.open_new_scope();
+        scopes.define({});
+
+        //pre_order_apply()
+
     }
     catch (const char *e)
     {

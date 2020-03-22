@@ -13,6 +13,7 @@ namespace yy
     public:
         std::string streamname;
         class std::unique_ptr<Lexer> lexer;
+        std::unique_ptr<ASTNodeBase> root;
         
         void error(const class location& l, const std::string& m)
         {

@@ -23,7 +23,7 @@ typedef yy::Parser::token_type token_type;
 #undef YY_INTERACTIVE
 
 %}
-
+%option nounistd
 %option noyywrap
  // enable built in line counting (flex)
 %option yylineno c++ 

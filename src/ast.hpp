@@ -11,6 +11,7 @@
 #include <vector>
 #include <initializer_list>
 #include <iostream>
+#include <functional>
 
 static int tab = 0;
 
@@ -34,7 +35,7 @@ public:
     // prints this node,its attributes, and its child nodes.
     virtual std::ostream &print(std::ostream &out) const = 0;
 
-    ASTNodeBase(
+    explicit ASTNodeBase(
         std::string name, std::initializer_list<ASTNodeBase *> children = {}
     ) : name(std::move(name)) {
 
@@ -50,7 +51,6 @@ struct ASTNodeAttribute {
     T value;
 
     friend std::ostream &operator<<(std::ostream &out, const ASTNodeAttribute &node) {
-
         out << node.label << ": " << node.value;
         return out;
     }
@@ -62,14 +62,12 @@ public:
     std::tuple<As...> attributes;
 
     explicit ASTNode(
-        std::string name, std::initializer_list<ASTNodeBase *> children = {}, As... attributes
+        const std::string& name, std::initializer_list<ASTNodeBase *> children = {}, As... attributes
     ) : ASTNodeBase(name, children), attributes(attributes...) {}
 
     std::ostream &print(std::ostream &out) const override {
 
         out << std::string(tab, ' ') << "(" << name;
-
-
         out << " (attributes (";
         std::apply(
             [&out](auto &&... values) {
@@ -78,7 +76,6 @@ public:
             }, attributes
         );
         out << "))";
-
         out << ")\n";
         tab++;
 
@@ -125,5 +122,12 @@ public:
         int value, std::initializer_list<ASTNodeBase *> children = {}
     ) : ASTNode<int>("int", children, value) {}
 };
+
+void pre_order_apply(const ASTNodeBase& root, const std::function<void(const ASTNodeBase&)>& function);
+
+void post_order_apply(const ASTNodeBase& root, const std::function<void(const ASTNodeBase&)>& function);
+
+void pre_post_order_apply(const ASTNodeBase& root, const std::function<void(const ASTNodeBase&)>& pre_order_function,
+    const std::function<void(const ASTNodeBase&)>& post_order_function);
 
 #endif //AST_H

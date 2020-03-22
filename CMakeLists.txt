@@ -7,39 +7,43 @@ find_package(BISON REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
-
 file(COPY tests DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
 
-flex_target(
-    Lex 
-    src/syntax.l 
-    ${CMAKE_CURRENT_BINARY_DIR}/syntax.yy.cc
-)
-
 bison_target(
-    Parser 
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/parser.ypp 
-    ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp
-    DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser.hpp
+        Parser
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/parser.ypp
+        ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp
+        DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser.hpp
 )
 
-add_library(bison_flex STATIC
-${FLEX_Lex_OUTPUTS}
-${BISON_Parser_OUTPUTS}
+flex_target(
+        Lex
+        src/syntax.l
+        ${CMAKE_CURRENT_BINARY_DIR}/syntax.yy.cc
 )
 
-target_include_directories(bison_flex PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+ADD_FLEX_BISON_DEPENDENCY(Lex Parser)
 
-add_executable(parser 
-    src/main.cpp 
-    src/driver.cpp 
-    src/declarations.hpp 
-    src/tokens.h src/tokens.cpp
-    src/ast.cpp src/ast.hpp
-)
+message(STATUS
+        ${FLEX_INCLUDE_DIRS})
 
-target_link_libraries(parser bison_flex)
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src)
+
+add_executable(parser
+        ${FLEX_INCLUDE_DIRS}
+        src/main.cpp
+        src/driver.cpp
+        src/declarations.hpp
+        src/tokens.h src/tokens.cpp
+        src/ast.cpp src/ast.hpp
+        src/scope_stack.cpp src/scope_stack.hpp
+        ${FLEX_Lex_OUTPUTS}
+        ${BISON_Parser_OUTPUTS}
+        )
+
+target_include_directories(parser
+        PUBLIC ${FLEX_INCLUDE_DIRS})
+
 target_compile_options(parser PRIVATE -Wall)
 
 add_custom_command(TARGET parser POST_BUILD

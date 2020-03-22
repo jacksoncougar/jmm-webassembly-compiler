@@ -12,7 +12,7 @@ int yydebug = 1;
 
 /* use newer C++ skeleton file */
 %skeleton "lalr1.cc"
-%define "parser_class_name" {Parser}
+%define api.parser.class {Parser}
 %parse-param { class Driver& driver }
 
 %code requires{
@@ -21,7 +21,8 @@ int yydebug = 1;
 
 
 %code top {
-        
+
+#include <memory>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -35,7 +36,7 @@ int yydebug = 1;
 
 
 %start start
-%error-verbose
+%define parse.error verbose
 
 %locations 
 %initial-action
@@ -128,8 +129,11 @@ int yydebug = 1;
 
 %%
 
-start   : /* nothing */ { $$ = new ASTNode("code"); }
-        | globaldeclarations { $$ = new ASTNode("code", {$1}); 
+start   : /* nothing */ { driver.root = std::make_unique<ASTNode<>>("code");
+}
+        | globaldeclarations { driver.root =
+        std::make_unique<ASTNode<>>("code",
+        std::initializer_list<ASTNodeBase*>{$1});
                                std::cout << *$$; } // print out AST
         ;
 

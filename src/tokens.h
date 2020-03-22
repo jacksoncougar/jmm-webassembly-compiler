@@ -8,7 +8,7 @@
 
 #include <map>
 #include <iostream>
-#include <unistd.h>
+#include <io.h>
 
 // Detect device output mode and colourize labels if writing to a terminal
 const bool colourize = isatty(1) && isatty(2);
