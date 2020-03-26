@@ -1,3 +1,4 @@
+// test that local variables can only be declared in the outermost scope... (why?)
 main() {
     int good; // this should not error...
     {

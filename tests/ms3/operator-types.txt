@@ -1,4 +1,4 @@
-// test operator types (should not error)
+// test 'good' operator types (should not error)
 main() {
     boolean t;
     boolean f;

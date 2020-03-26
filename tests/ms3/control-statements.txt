@@ -1,3 +1,4 @@
+// test that control statements must have boolean expressions.
 main() {
     if(1) { } // should error "if condition must be boolean type"
     while(1) { } // should error "while condition must be boolean type"

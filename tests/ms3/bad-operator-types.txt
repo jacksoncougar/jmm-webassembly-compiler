@@ -1,4 +1,4 @@
-// test bad operator types (should error)
+// test bad operator types and mismatched types (should error)
 main() {
     boolean t;
     t = true;

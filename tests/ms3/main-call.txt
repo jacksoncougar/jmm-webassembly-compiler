@@ -1,3 +1,4 @@
+// test that the main declaration cannot be called as a function.
 main() {
     function();     // should not error
     main();         // should error main function cannot be called.

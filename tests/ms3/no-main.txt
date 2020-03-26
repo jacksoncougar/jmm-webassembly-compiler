@@ -1,2 +1,2 @@
-// should have error "No main declaration found."
+// test that not having a main declaration results in an error.
 int j;

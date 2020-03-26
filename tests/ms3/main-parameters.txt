@@ -1,3 +1,4 @@
+// test that the main declaration cannot have arguments.
 main(int argc) {
     // should error main declaration cannot have arguments
 }

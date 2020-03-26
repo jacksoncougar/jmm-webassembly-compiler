@@ -1,3 +1,4 @@
+// test that multiple definitions of the same identifier in a scope is an error.
 main() {
     int i;
     int i; // should error identifier redefinition.

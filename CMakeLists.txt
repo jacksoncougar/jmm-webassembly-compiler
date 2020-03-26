@@ -63,6 +63,8 @@ foreach(test ${TEST_FILES})
     endif()
     add_custom_target(test-${VAR}
         COMMAND echo "Running test '${test}'"
+        COMMAND cat ${test}
+        COMMAND echo "\n"
         COMMAND parser ${test}
             )
                         if(${VAR} GREATER  0)

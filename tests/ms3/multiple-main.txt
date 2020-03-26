@@ -1,3 +1,3 @@
-// should have error "multiple main definitions found"
+// test the multiple main declarations result in an error.
 main() { }
 main() { }
