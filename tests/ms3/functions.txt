@@ -22,7 +22,7 @@ main() {
     function2("string boi"); // should error wrong argument type
     function2(2); // should error wrong argument type
 
-    bool b;
+    boolean b;
     b = function2(false); // should error wrong return type.
 
     int i;
