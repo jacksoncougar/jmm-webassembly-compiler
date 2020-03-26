@@ -8,32 +8,26 @@
 
 #include <map>
 #include <iostream>
-#include <io.h>
 
-// Detect device output mode and colourize labels if writing to a terminal
-const bool colourize = isatty(1) && isatty(2);
 
-const std::string warning_label = colourize ? "\x1B[01;31mWarning\x1B[0m: " : "Warning: ";
-const std::string error_label = colourize ? "\x1B[01;31mError\x1B[0m: " : "Error: ";
+const std::string warning_label = "Warning: ";
+const std::string error_label = "Error: ";
 
-template <typename... Args>
-void warning(Args... args)
-{
+template<typename... Args>
+void warning(Args... args) {
     std::cerr << warning_label;
     (std::cerr << ... << args); // c++ fold
     std::cerr << std::endl;
 }
 
-template <typename... Args>
-void error(Args... args)
-{
+template<typename... Args>
+void error(Args... args) {
     std::cerr << error_label;
     (std::cerr << ... << args); // c++ fold
     std::cerr << std::endl;
 }
 
-struct TokenAttributes
-{
+struct TokenAttributes {
     int lineno;
     std::string lexeme;
 };

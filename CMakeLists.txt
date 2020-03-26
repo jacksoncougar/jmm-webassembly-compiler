@@ -44,30 +44,31 @@ add_executable(parser
 target_include_directories(parser
         PUBLIC ${FLEX_INCLUDE_DIRS})
 
-target_compile_options(parser PRIVATE -Wall)
+target_compile_options(parser PRIVATE  -Wall -Wpedantic)
+target_link_options(parser PRIVATE  -Wall -Wpedantic)
 
 add_custom_command(TARGET parser POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/tests $<TARGET_FILE_DIR:parser>/tests)
 
 
-#
-#file(GLOB_RECURSE TEST_FILES tests/ms2/*.txt TEST/ms2/*.t??  TEST/ms2/*.t?)
-#set(VAR 0)
-#add_custom_target(ALLTEST)
-#foreach(test ${TEST_FILES})
-#    message(STATUS "Creating target for test-file '${test} ${VAR}'")
-#    if(${VAR} GREATER  0)
-#        MATH(EXPR PREVIOUS "${VAR}-1")
-#    endif()
-#    add_custom_target(test-${VAR}
-#        COMMAND echo "Running test '${test}'"
-#        COMMAND parser ${test}
-#            )
-#                        if(${VAR} GREATER  0)
-#    message(STATUS "Creating dep.")
-#    add_dependencies(test-${VAR} test-${PREVIOUS})
-#    endif()
-#    add_dependencies(ALLTEST test-${VAR})
-#    MATH(EXPR VAR "${VAR}+1")
-#endforeach(test ${TEST_FILES})
+
+file(GLOB_RECURSE TEST_FILES tests/ms3/*.txt)
+set(VAR 0)
+add_custom_target(ALLTEST)
+foreach(test ${TEST_FILES})
+    message(STATUS "Creating target for test-file '${test} ${VAR}'")
+    if(${VAR} GREATER  0)
+        MATH(EXPR PREVIOUS "${VAR}-1")
+    endif()
+    add_custom_target(test-${VAR}
+        COMMAND echo "Running test '${test}'"
+        COMMAND parser ${test}
+            )
+                        if(${VAR} GREATER  0)
+    message(STATUS "Creating dep.")
+    add_dependencies(test-${VAR} test-${PREVIOUS})
+    endif()
+    add_dependencies(ALLTEST test-${VAR})
+    MATH(EXPR VAR "${VAR}+1")
+endforeach(test ${TEST_FILES})

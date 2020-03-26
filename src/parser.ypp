@@ -12,7 +12,7 @@ int yydebug = 1;
 
 /* use newer C++ skeleton file */
 %skeleton "lalr1.cc"
-%define api.parser.class {Parser}
+%define parser_class_name {Parser}
 %parse-param { class Driver& driver }
 
 %code requires{

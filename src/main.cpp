@@ -35,6 +35,7 @@ int main(int argc, char **argv) {
         driver.parse_stream(ifs);
 
         // semantic checking...
+
         ScopeStack scopes;
         scopes.open_new_scope();
 
@@ -61,7 +62,7 @@ int main(int argc, char **argv) {
 
                         auto entry = SymbolTableEntry{id, "", type,
                                                       node.template get_attribute<yy::location>("location"), nullptr};
-                        node.set_attribute("ste",
+                        node.set_attribute("symbol",
                                            scopes.define({id, node[1].template get_attribute<yy::location>("location")},
                                                          std::move(entry)));
                     }
@@ -75,7 +76,7 @@ int main(int argc, char **argv) {
                                   " main declaration cannot have parameters.");
                         }
 
-                        node.set_attribute("ste",
+                        node.set_attribute("symbol",
                                            scopes.define(
                                                    {id, node[0][0].template get_attribute<yy::location>("location")},
                                                    {id, "", "main",
@@ -104,7 +105,7 @@ int main(int argc, char **argv) {
                         auto entry = SymbolTableEntry(id, "", "function",
                                                       node.template get_attribute<yy::location>("location"),
                                                       function_symbol);
-                        node.set_attribute("ste", scopes.define(
+                        node.set_attribute("symbol", scopes.define(
                                 {id, node[0][1][0].template get_attribute<yy::location>("location")},
                                 std::move(entry)));
 
@@ -200,7 +201,7 @@ int main(int argc, char **argv) {
                         auto id = node[1].template get_attribute<std::string>("value");
 
 
-                        node.set_attribute("ste",
+                        node.set_attribute("symbol",
                                            scopes.define({id, node[1].template get_attribute<yy::location>("location")},
                                                          {id, "", type,
                                                           node.template get_attribute<yy::location>("location"),
@@ -235,7 +236,7 @@ int main(int argc, char **argv) {
                                                                       {params.begin(), params.end()},
                                                                       node.template get_attribute<yy::location>(
                                                                               "location")})};
-                        node.set_attribute("ste", scopes.define(
+                        node.set_attribute("symbol", scopes.define(
                                 {id, node[0][1][0].template get_attribute<yy::location>("location")},
                                 std::move(entry)));
                     }
@@ -245,7 +246,7 @@ int main(int argc, char **argv) {
                         auto type = node[0].name;
                         auto id = node[1].template get_attribute<std::string>("value");
 
-                        node.set_attribute("ste",
+                        node.set_attribute("symbol",
                                            scopes.define({id, node[1].template get_attribute<yy::location>("location")},
                                                          {id, "", type,
                                                           node.template get_attribute<yy::location>("location"),
@@ -256,7 +257,7 @@ int main(int argc, char **argv) {
                             node[1].set_attribute("processed", true);
                         }
                         auto id = node[0].template get_attribute<std::string>("value");
-                        auto symbol = node.set_attribute("ste", scopes.lookup(
+                        auto symbol = node.set_attribute("symbol", scopes.lookup(
                                 {id, node[0].template get_attribute<yy::location>("location")}));
                         if (!symbol->function) {
                             error(node.template get_attribute<yy::location>("location"), " Identifier '", id,
@@ -267,7 +268,7 @@ int main(int argc, char **argv) {
                     }
 
                     if (node.type == ASTNodeType::identifier) {
-                        auto symbol = node.set_attribute("ste",
+                        auto symbol = node.set_attribute("symbol",
                                                          scopes.lookup(
                                                                  {node.template get_attribute<std::string>("value"),
                                                                   node.template get_attribute<yy::location>(
@@ -329,7 +330,7 @@ int main(int argc, char **argv) {
             if (node.type == ASTNodeType::functioninvocation) {
                 // check return type
                 // check number of arguments & types
-                SymbolTableEntry *symbol = node[0].template get_attribute<SymbolTableEntry *>("ste");
+                SymbolTableEntry *symbol = node[0].template get_attribute<SymbolTableEntry *>("symbol");
 
                 std::vector<std::string> params;
                 if (node.children().size() > 1) {
@@ -340,7 +341,7 @@ int main(int argc, char **argv) {
 
                 if (!(symbol->function)) return; // hmmmmmmmmmmmmmmmmmmm
 
-                if (symbol->function->number_of_args != params.size()) {
+                if ((size_t)symbol->function->number_of_args != (size_t)params.size()) {
                     error(node.template get_attribute<yy::location>("location"),
                           " wrong number of arguments: expected '", symbol->function->number_of_args,
                           "' but received '", params.size(),
@@ -385,7 +386,7 @@ int main(int argc, char **argv) {
                         inside_while_scope++;
                     }
                     if (node.type == ASTNodeType::functiondeclaration) {
-                        auto symbol = node.template get_attribute<SymbolTableEntry *>("ste");
+                        auto symbol = node.template get_attribute<SymbolTableEntry *>("symbol");
                         return_type = symbol->function->return_type;
                         require_return = return_type != "void";
                         has_return = false;
