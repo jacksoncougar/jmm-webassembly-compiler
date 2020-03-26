@@ -1,0 +1,8 @@
+// test that break statements must be inside of while blocks
+main() {
+    break; // should error
+
+    while(true) {
+        break; //should not error
+    }
+}

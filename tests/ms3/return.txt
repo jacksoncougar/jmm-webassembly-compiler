@@ -1,0 +1,8 @@
+int function() { } // should error 'no return statement'
+void function1() { return 1; } // should error 'return statement in void function'
+int function2() { return false; } // should error 'wrong return type'
+boolean function3() { return 1; } // should error 'wrong return type'
+
+main() {
+    function();
+}

@@ -1,5 +1,23 @@
 int x;
-void main() {
+
+main() {
     x = 3;
+    int j;
+    if(true)
+    {
+        j = function("hi",4);
+        int j;
+    }
+
+    boolean b;
+    b = false;
+    if(10) { }
+    if(true && false && b + x)
+    {
+
+    }
 }
 
+int function(int param1, int param2) {
+    return 1;
+}

@@ -1,0 +1,93 @@
+// test operator types (should not error)
+main() {
+    bool t;
+    bool f;
+    t = true;
+    f = false;
+
+    bool result;
+    result = t || f;
+    result = true || f;
+    result = t || false;
+    result = true || false;
+
+    result = t && f;
+    result = true && f;
+    result = t && false;
+    result = true && false;
+
+    result = t == f;
+    result = true == f;
+    result = t == false;
+    result = true == false;
+
+    result = t != f;
+    result = true != f;
+    result = t != false;
+    result = true != false;
+
+    int int_result;
+    int a = 0;
+    int b = 1;
+
+    int_result = a == b;
+    int_result = 0 == b;
+    int_result = a == 1;
+    int_result = 0 == 1;
+
+    int_result = a != b;
+    int_result = 0 != b;
+    int_result = a != 1;
+    int_result = 0 != 1;
+
+    int_result = a < b;
+    int_result = 0 < b;
+    int_result = a < 1;
+    int_result = 0 < 1;
+
+    int_result = a <= b;
+    int_result = 0 <= b;
+    int_result = a <= 1;
+    int_result = 0 <= 1;
+
+    int_result = a > b;
+    int_result = 0 > b;
+    int_result = a > 1;
+    int_result = 0 > 1;
+
+    int_result = a >= b;
+    int_result = 0 >= b;
+    int_result = a >= 1;
+    int_result = 0 >= 1;
+
+    int_result = a + b;
+    int_result = 0 + b;
+    int_result = a + 1;
+    int_result = 0 + 1;
+
+    int_result = a - b;
+    int_result = 0 - b;
+    int_result = a - 1;
+    int_result = 0 - 1;
+
+    int_result = a * b;
+    int_result = 0 * b;
+    int_result = a * 1;
+    int_result = 0 * 1;
+
+    int_result = a / b;
+    int_result = 0 / b;
+    int_result = a / 1;
+    int_result = 0 / 1;
+
+    int_result = a % b;
+    int_result = 0 % b;
+    int_result = a % 1;
+    int_result = 0 % 1;
+
+    int_result = !a;
+    int_result = !0;
+
+    int_result = -a;
+    int_result = -0;
+}

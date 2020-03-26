@@ -1,0 +1,21 @@
+int function1(int a) {
+    return a;
+}
+
+int function2(bool b) {
+    return b;
+}
+
+main() {
+    function1(2,2); // should error too many arguments
+    function1(); // should error too few arguments
+
+    function2(2,2); // should error too many arguments
+    function2(); // should error too few arguments
+
+    function1("string"); // should error wrong argument type
+    function1(false); // should error wrong argument type
+
+    function2("string"); // should error wrong argument type
+    function2(2); // should error wrong argument type
+}

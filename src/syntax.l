@@ -13,6 +13,8 @@
 #include "tokens.h"
 #include "parser.hpp"
 
+    using namespace std::string_literals;
+
 int yylineno = 1;
 int warningno = 0;
 
@@ -65,15 +67,15 @@ StringCharacter         ([^\r\n"\\]|{EscapeSequence})
 yylloc->step();
 %}
  // Keywords go at the top
-"int" { yylval->a = new ASTNode(yytext); return token::INT; }
-"boolean" { yylval->a = new ASTNode(yytext); return token::BOOLEAN; }
+"int" { yylval->a = new ASTNode(ASTNodeType::type, yytext); return token::INT; }
+"boolean" { yylval->a = new ASTNode(ASTNodeType::type, yytext); return token::BOOLEAN; }
 
-"if" { yylval->a = new ASTNode("if"); return token::IF; }
-"else" { yylval->a = new ASTNode("else"); return token::ELSE; }
-"while" { yylval->a = new ASTNode("while"); return token::WHILE; }
-"break" { yylval->a = new ASTNode("break"); return token::BREAK; }
-"return" { yylval->a = new ASTNode("return"); return token::RETURN; }
-"void" { yylval->a = new ASTNode("void"); return token::VOID; }
+"if" { yylval->a = new ASTNode(ASTNodeType::statement, "if"); return token::IF; }
+"else" { yylval->a = new ASTNode(ASTNodeType::statement,"else"); return token::ELSE; }
+"while" { yylval->a = new ASTNode(ASTNodeType::statement,"while"); return token::WHILE; }
+"break" { yylval->a = new ASTNode(ASTNodeType::statement,"break"); return token::BREAK; }
+"return" { yylval->a = new ASTNode(ASTNodeType::statement,"return"); return token::RETURN; }
+"void" { yylval->a = new ASTNode(ASTNodeType::statement,"void"); return token::VOID; }
 
 ["]  { BEGIN STRING; yymore(); }
 <STRING>{StringCharacter}*  { yymore(); }
@@ -96,12 +98,16 @@ yylloc->step();
     ASTNodeAttribute<std::string>,
     ASTNodeAttribute<std::string>,
     ASTNodeAttribute<int>>(
+        ASTNodeType::literal,
         "string", 
         {}, 
         {"name", "string"}, 
         {"value", yytext},
         {"lineno", yylineno}
     );
+
+    yylval->a->set_attribute("value", std::string(yytext));
+    yylval->a->set_attribute("type", "string"s);
     return token::STRING_LITERAL; }
 <STRING>\\. { BEGIN ESCAPE; yyless(1); /* ignore opening quotation */ }
 
@@ -139,14 +145,21 @@ yylloc->step();
 
 true    {  
     yylval->a = new ASTNode<ASTNodeAttribute<std::string>>(
+        ASTNodeType::literal,
         "true",{}, {"value", yytext}
-        ); 
+        );
+
+    yylval->a->set_attribute("value", std::string(yytext));
+    yylval->a->set_attribute("type", "boolean"s);
     return token::TRUE; }
 
 false    {  
     yylval->a = new ASTNode<ASTNodeAttribute<std::string>>(
+        ASTNodeType::literal,
         "false",{}, {"value", yytext}
-        ); 
+        );
+    yylval->a->set_attribute("value", std::string(yytext));
+    yylval->a->set_attribute("type", "boolean"s);
     return token::FALSE; }
 
 {OctalLikeNumeral}  { 
@@ -156,13 +169,16 @@ false    {
     ASTNodeAttribute<std::string>,
     ASTNodeAttribute<int>,
     ASTNodeAttribute<std::string>>(
-        "number", 
+        ASTNodeType::literal,
+        "int",
         {}, 
         {"name", "number"}, 
         {"warning", "treating octal-like number as decimal numeral."}, 
         {"lineno", yylineno}, 
         {"value", yytext}
     );
+    yylval->a->set_attribute("value", std::string(yytext));
+    yylval->a->set_attribute("type", "int"s);
     return token::NUMBER; }
 
 {DecimalNumeral}    { 
@@ -170,20 +186,25 @@ false    {
     ASTNodeAttribute<std::string>,
     ASTNodeAttribute<int>,
     ASTNodeAttribute<std::string>>(
-        "number", 
+        ASTNodeType::literal,
+        "int",
         {}, 
         {"name", "number"}, 
         {"lineno", yylineno}, 
         {"value", yytext}
     );
+    yylval->a->set_attribute("value", std::string(yytext));
+    yylval->a->set_attribute("type", "int"s);
     return token::NUMBER; }
 
 {Identifier}        { 
     yylval->a = new ASTNode<
     ASTNodeAttribute<std::string>,
     ASTNodeAttribute<int>>(
-        "id", {}, {"name", yytext}, {"lineno", yylineno}
+        ASTNodeType::identifier,
+        "id", {}, {"name", ""}, {"lineno", yylineno}
         );
+    yylval->a->set_attribute("value", std::string(yytext));
     return token::ID; }
 
 [ \t\f]+      {

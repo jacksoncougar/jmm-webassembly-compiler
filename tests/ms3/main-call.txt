@@ -1,0 +1,8 @@
+main() {
+    function();     // should error main function cannot be called.
+    main();         // should error main function cannot be called.
+}
+
+void function() {
+    main();         // should error main function cannot be called.
+}

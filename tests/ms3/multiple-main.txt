@@ -1,0 +1,3 @@
+// should have error "multiple main definitions found"
+main() { }
+main() { }

@@ -1,0 +1,6 @@
+main() {
+    {
+        int bad;        // should error A local declaration was not in an outermost block.
+        boolean bad;    // should error A local declaration was not in an outermost block.
+    }
+}

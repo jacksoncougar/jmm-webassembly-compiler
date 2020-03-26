@@ -1,0 +1,4 @@
+main() {
+    if(1) { } // should error "if condition must be boolean type"
+    while(1) { } // should error "if condition must be boolean type"
+}

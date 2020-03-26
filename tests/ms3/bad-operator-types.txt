@@ -1,0 +1,74 @@
+// test bad operator types (should error)
+main() {
+    bool t;
+    t = true;
+
+    int a;
+    a = 0;
+    
+    bool result;
+    result = t || a;
+    result = true || a;
+    result = true || 0;
+    result = t || 0;
+
+    result = t && a;
+    result = true && a;
+    result = true && 0;
+    result = t && 0;
+
+    result = t == a;
+    result = true == a;
+    result = true == 0;
+    result = t == 0;
+
+    result = t != a;
+    result = true != a;
+    result = true != 0;
+    result = t != 0;
+
+    result = t < a;
+    result = true < a;
+    result = true < 0;
+    result = t < 0;
+
+    result = t <= a;
+    result = true <= a;
+    result = true <= 0;
+    result = t <= 0;
+
+    result = t > a;
+    result = true > a;
+    result = true > 0;
+    result = t > 0;
+
+    result = t >= a;
+    result = true >= a;
+    result = true >= 0;
+    result = t >= 0;
+
+    result = t + a;
+    result = true + a;
+    result = true + 0;
+    result = t + 0;
+
+    result = t - a;
+    result = true - a;
+    result = true - 0;
+    result = t - 0;
+
+    result = t * a;
+    result = true * a;
+    result = true * 0;
+    result = t * 0;
+
+    result = t / a;
+    result = true / a;
+    result = true / 0;
+    result = t / 0;
+
+    result = t % a;
+    result = true % a;
+    result = true % 0;
+    result = t % 0;
+}

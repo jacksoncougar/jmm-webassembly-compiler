@@ -1,0 +1,8 @@
+main() {
+    int i;
+    int i; // should error identifier redefinition.
+
+    boolean i; // should error identifier redefinition
+
+    j = 0; // should error undefined identifier
+}
