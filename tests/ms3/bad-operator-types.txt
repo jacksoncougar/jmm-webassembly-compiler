@@ -1,12 +1,12 @@
 // test bad operator types (should error)
 main() {
-    bool t;
+    boolean t;
     t = true;
 
     int a;
     a = 0;
     
-    bool result;
+    boolean result;
     result = t || a;
     result = true || a;
     result = true || 0;

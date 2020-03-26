@@ -40,6 +40,7 @@ int main(int argc, char **argv) {
 
         std::vector<std::string> type_stack;
 
+        bool has_main_declaration = false;
         // pass 0: process global decls
         pre_post_order_apply(
                 *driver.root,
@@ -51,22 +52,35 @@ int main(int argc, char **argv) {
                     }
                     return true;
                 },
-                [&scopes](auto &node) {
+                [&scopes, &has_main_declaration](auto &node) {
                     if (!node.has_attribute("global")) return; // only process globals
                     if (node.type == ASTNodeType::variabledeclaration) {
                         node.set_attribute("processed", true);
                         auto type = node[0].name;
                         auto id = node[1].template get_attribute<std::string>("value");
 
-                        auto entry = SymbolTableEntry{id, "", type, node.location};
-                        node.set_attribute("ste", scopes.define({id, node[1].location}, std::move(entry)));
+                        auto entry = SymbolTableEntry{id, "", type,
+                                                      node.template get_attribute<yy::location>("location"), nullptr};
+                        node.set_attribute("ste",
+                                           scopes.define({id, node[1].template get_attribute<yy::location>("location")},
+                                                         std::move(entry)));
                     }
                     if (node.type == ASTNodeType::mainfunctiondeclaration) {
+                        has_main_declaration = true;
                         node.set_attribute("processed", true);
-                        auto id = node[0].template get_attribute<std::string>("value");
+                        auto id = node[0][0].template get_attribute<std::string>("value");
 
-                        node.set_attribute("ste", scopes.define({id, node[0].location},
-                                                                {id, "", "main", node.location, nullptr}));
+                        if (node[0].children().size() > 1) {
+                            error(node.template get_attribute<yy::location>("location"),
+                                  " main declaration cannot have parameters.");
+                        }
+
+                        node.set_attribute("ste",
+                                           scopes.define(
+                                                   {id, node[0][0].template get_attribute<yy::location>("location")},
+                                                   {id, "", "main",
+                                                    node.template get_attribute<yy::location>("location"),
+                                                    nullptr}));
                     }
                     if (node.type == ASTNodeType::functiondeclaration) {
                         node.set_attribute("processed", true);
@@ -80,58 +94,74 @@ int main(int argc, char **argv) {
                             }
                         }
 
-                        auto entry = SymbolTableEntry{id, "", "function", node.location,
-                                                      std::make_unique<FunctionSymbolTableEntry>(
-                                                              FunctionSymbolTableEntry{
-                                                                      Template{"{rtype} {id} ({args})"} << return_type
-                                                                                                        << id << params,
-                                                                      return_type, (int) params.size(),
-                                                                      {params.begin(), params.end()},
-                                                                      node.location})};
-                        node.set_attribute("ste", scopes.define({id, node[0][1][0].location}, std::move(entry)));
+                        auto function_symbol = new FunctionSymbolTableEntry(
+                                Template{"{rtype} {id} ({args})"} << return_type
+                                                                  << id << params,
+                                return_type, (int) params.size(),
+                                std::vector<std::string>(params.begin(), params.end()),
+                                node.template get_attribute<yy::location>("location"));
+
+                        auto entry = SymbolTableEntry(id, "", "function",
+                                                      node.template get_attribute<yy::location>("location"),
+                                                      function_symbol);
+                        node.set_attribute("ste", scopes.define(
+                                {id, node[0][1][0].template get_attribute<yy::location>("location")},
+                                std::move(entry)));
 
                     }
                 }
         );
 
-        typedef  std::string type;
-        typedef  std::string $operator;
+        if (!has_main_declaration) {
+            error("No main declaration.");
+        }
+
+        typedef std::string type;
+        typedef std::string $operator;
 
         std::map<std::tuple<$operator, type>, type> unary_operand_types = {
                 {{"!", "boolean"}, "boolean"},
-                {{"-", "int"}, "int"},
+                {{"-", "int"},     "int"},
         };
 
         std::map<std::tuple<$operator, type, type>, type> binary_operand_types = {
-                {{"=", "int", "int"}, "int"},
-                {{"=", "boolean", "boolean"}, "boolean"},
-                {{"+", "int", "int"}, "int"},
-                {{"-", "int", "int"}, "int"},
-                {{"*", "int", "int"}, "int"},
-                {{"/", "int", "int"}, "int"},
-                {{"%", "int", "int"}, "int"},
+                {{"=",  "int",     "int"},     "int"},
+                {{"=",  "boolean", "boolean"}, "boolean"},
+                {{"+",  "int",     "int"},     "int"},
+                {{"-",  "int",     "int"},     "int"},
+                {{"*",  "int",     "int"},     "int"},
+                {{"/",  "int",     "int"},     "int"},
+                {{"%",  "int",     "int"},     "int"},
 
-                {{"<", "int", "int"}, "int"},
-                {{"<=", "int", "int"}, "int"},
-                {{">", "int", "int"}, "int"},
-                {{">=", "int", "int"}, "int"},
+                {{"<",  "int",     "int"},     "int"},
+                {{"<=", "int",     "int"},     "int"},
+                {{">",  "int",     "int"},     "int"},
+                {{">=", "int",     "int"},     "int"},
 
-                {{"==", "int", "int"}, "int"},
-                {{"!=", "int", "int"}, "int"},
+                {{"==", "int",     "int"},     "int"},
+                {{"!=", "int",     "int"},     "int"},
+                {{"==", "boolean", "boolean"}, "boolean"},
+                {{"!=", "boolean", "boolean"}, "boolean"},
 
                 {{"&&", "boolean", "boolean"}, "boolean"},
                 {{"||", "boolean", "boolean"}, "boolean"},
         };
 
         // pass 1: process all other decls
+        int scope_depth = 0;
         pre_post_order_apply(
                 *driver.root,
-                [&scopes](const auto &node) {
+                [&scopes, &scope_depth](const auto &node) {
 
                     if (node.type == ASTNodeType::functiondeclaration) {
                         scopes.open_new_scope();
                         node[0].set_attribute("function-scope", true);
                         node[1].set_attribute("function-scope", true);
+                        scope_depth++;
+                    }
+
+                    if (node.type == ASTNodeType::block) {
+                        scope_depth++;
                     }
 
                     if (!node.has_attribute("function-scope") && node.type == ASTNodeType::block) {
@@ -147,10 +177,15 @@ int main(int argc, char **argv) {
 
                     return true;
                 },
-                [&scopes, &binary_operand_types](auto &node) {
+                [&scopes, &scope_depth, &binary_operand_types, &unary_operand_types](auto &node) {
 
                     if (node.type == ASTNodeType::functiondeclaration) {
                         scopes.close_top_scope();
+                        scope_depth--;
+                    }
+
+                    if (node.type == ASTNodeType::block) {
+                        scope_depth--;
                     }
 
                     if (!node.has_attribute("function-scope") && node.type == ASTNodeType::block) {
@@ -165,8 +200,15 @@ int main(int argc, char **argv) {
                         auto id = node[1].template get_attribute<std::string>("value");
 
 
-                        auto ste = node.set_attribute("ste", scopes.define({id, node[1].location},
-                                                                           {id, "", type, node.location, nullptr}));
+                        node.set_attribute("ste",
+                                           scopes.define({id, node[1].template get_attribute<yy::location>("location")},
+                                                         {id, "", type,
+                                                          node.template get_attribute<yy::location>("location"),
+                                                          nullptr}));
+                        if (scope_depth != 1) {
+                            error(node.template get_attribute<yy::location>("location"),
+                                  " local declarations must appear in outermost scope.");
+                        }
                     }
                     if (node.type == ASTNodeType::functiondeclaration) {
                         auto rtype = node[0][0].name;
@@ -183,15 +225,19 @@ int main(int argc, char **argv) {
                                                              const std::string &b) -> std::string {
                                                               return a + (a.length() > 0 ? "," : "") + b;
                                                           });
-                        auto entry = SymbolTableEntry{id, "", "function", node.location,
-                                                      std::make_unique<FunctionSymbolTableEntry>(
+                        auto entry = SymbolTableEntry{id, "", "function",
+                                                      node.template get_attribute<yy::location>("location"),
+                                                      new FunctionSymbolTableEntry(
                                                               FunctionSymbolTableEntry{
                                                                       Template{"{rtype} {id} ({args})"} << rtype << id
                                                                                                         << param_list,
                                                                       rtype, (int) params.size(),
                                                                       {params.begin(), params.end()},
-                                                                      node.location})};
-                        node.set_attribute("ste", scopes.define({id, node[0][1][0].location}, std::move(entry)));
+                                                                      node.template get_attribute<yy::location>(
+                                                                              "location")})};
+                        node.set_attribute("ste", scopes.define(
+                                {id, node[0][1][0].template get_attribute<yy::location>("location")},
+                                std::move(entry)));
                     }
 
                     if (node.type == ASTNodeType::formalparameter) {
@@ -199,48 +245,85 @@ int main(int argc, char **argv) {
                         auto type = node[0].name;
                         auto id = node[1].template get_attribute<std::string>("value");
 
-                        node.set_attribute("ste", scopes.define({id, node[1].location},
-                                                                {id, "", type, node.location, nullptr}));
+                        node.set_attribute("ste",
+                                           scopes.define({id, node[1].template get_attribute<yy::location>("location")},
+                                                         {id, "", type,
+                                                          node.template get_attribute<yy::location>("location"),
+                                                          nullptr}));
                     }
                     if (node.type == ASTNodeType::functioninvocation) {
-                        node[1].set_attribute("processed", true);
+                        if (node.children().size() > 1) {
+                            node[1].set_attribute("processed", true);
+                        }
                         auto id = node[0].template get_attribute<std::string>("value");
-                        auto symbol = node.set_attribute("ste", scopes.lookup({id, node[1].location}));
-                        node.set_attribute("type", symbol->function->return_type);
+                        auto symbol = node.set_attribute("ste", scopes.lookup(
+                                {id, node[0].template get_attribute<yy::location>("location")}));
+                        if (!symbol->function) {
+                            error(node.template get_attribute<yy::location>("location"), " Identifier '", id,
+                                  "' does not name a callable function.");
+                        } else {
+                            node.set_attribute("type", symbol->function->return_type);
+                        }
                     }
 
                     if (node.type == ASTNodeType::identifier) {
                         auto symbol = node.set_attribute("ste",
-                                           scopes.lookup(
-                                                   {node.template get_attribute<std::string>("value"), node.location}));
+                                                         scopes.lookup(
+                                                                 {node.template get_attribute<std::string>("value"),
+                                                                  node.template get_attribute<yy::location>(
+                                                                          "location")}));
 
-                        node.set_attribute("type", symbol->type);
+                        if (symbol) { node.set_attribute("type", symbol->type); }
+                        else { node.set_attribute("type", "<error-type>"s); }
                     }
                     // types down here...
 
+                    if (node.type == ASTNodeType::unaryexpression) {
+                        //std::cout << node.template get_attribute<yy::location>("location") << std::endl;
+                        auto operand = node[0].template get_attribute<std::string>("type");
+                        auto op = node.name;
+                        auto result_type = unary_operand_types.find({op, operand});
+                        if (result_type == unary_operand_types.end()) {
+                            error(node.template get_attribute<yy::location>("location"), " Type mismatch in operator '",
+                                  op, "'\n");
+                            node.set_attribute("type", "<error-type>"s);
+                        } else {
+                            node.set_attribute("type", result_type->second);
+                        }
+                    }
+
                     if (node.type == ASTNodeType::infixoperator) {
+                        //std::cout << node.template get_attribute<yy::location>("location") << std::endl;
                         auto right = node[0].template get_attribute<std::string>("type");
                         auto left = node[1].template get_attribute<std::string>("type");
                         auto op = node.name;
                         auto result_type = binary_operand_types.find({op, left, right});
-                        if(result_type == binary_operand_types.end()) {
-                            error(node.template get_attribute<yy::location>("location"), " Type mismatch in operator '", op, "'\n");
+                        if (result_type == binary_operand_types.end()) {
+                            error(node.template get_attribute<yy::location>("location"), " Type mismatch in operator '",
+                                  op, "'\n");
                             node.set_attribute("type", "<error-type>"s);
-                        }
-                        else {
+                        } else {
                             node.set_attribute("type", result_type->second);
                         }
                     }
 
                 });
+        scopes.close_top_scope();
 
         // pass 2: type checking
         pre_post_order_apply(*driver.root, [&scopes](const auto &node) {
             return true;
         }, [&scopes](auto &node) {
             if (node.type == ASTNodeType::ifstatement) {
-                if(node[0].template get_attribute<std::string>("type") != "boolean") {
-                    error(node[0].template get_attribute<yy::location>("location"), " if statement must have boolean type.");
+                if (node[0].template get_attribute<std::string>("type") != "boolean") {
+                    error(node[0].template get_attribute<yy::location>("location"),
+                          " if statement must have boolean type expression.");
+                }
+            }
+            if (node.type == ASTNodeType::whilestatement) {
+                if (node[0].template get_attribute<std::string>("type") != "boolean") {
+                    error(node[0].template get_attribute<yy::location>("location"),
+                          " while statement must have boolean type expression.");
                 }
             }
             if (node.type == ASTNodeType::functioninvocation) {
@@ -249,11 +332,13 @@ int main(int argc, char **argv) {
                 SymbolTableEntry *symbol = node[0].template get_attribute<SymbolTableEntry *>("ste");
 
                 std::vector<std::string> params;
-                if (node[1].children().size() > 1) {
+                if (node.children().size() > 1) {
                     for (auto &p : node[1].children()) {
-                        params.emplace_back(p->name);
+                        params.emplace_back(p->template get_attribute<std::string>("type"));
                     }
                 }
+
+                if (!(symbol->function)) return; // hmmmmmmmmmmmmmmmmmmm
 
                 if (symbol->function->number_of_args != params.size()) {
                     error(node.template get_attribute<yy::location>("location"),
@@ -262,21 +347,87 @@ int main(int argc, char **argv) {
                           "'.");
                 }
                 if (symbol->function->arg_types != params) {
-                    std::equal(params.begin(), params.end(), symbol->function->arg_types.begin(),
-                               [&node](auto r, auto e) {
-                                   if (e != r) {
-                                       error(node.template get_attribute<yy::location>("location"),
-                                             " incorrect argument type: expected '", e,
-                                             "' but was '", r, "'");
-                                   }
-                                   return true;
-                               });
+                    auto it1 = params.begin();
+                    auto it2 = symbol->function->arg_types.begin();
+                    while (it1 != params.end() && it2 != symbol->function->arg_types.end()) {
+                        if (*it1 != *it2) {
+                            error(node.template get_attribute<yy::location>("location"),
+                                  " incorrect argument type: expected '", *it2,
+                                  "' but was '", *it1, "'");
+                        }
+                        it1++;
+                        it2++;
+                    }
+                    while (it1 != params.end()) {
+                        error(node.template get_attribute<yy::location>("location"),
+                              " extra argument type: '", *it1, "'");
+                        it1++;
+                    }
+                    while (it2 != symbol->function->arg_types.end()) {
+                        error(node.template get_attribute<yy::location>("location"),
+                              " missing argument type: '", *it2, "'");
+                        it2++;
+
+                    }
                 }
             }
         });
 
-        std::cout << scopes;
-        std::cout << "aAST: \n" << *driver.root << std::endl;
+        // pass 3: general catch-all pass
+        int inside_while_scope = 0;
+        type return_type;
+        bool require_return = false;
+        bool has_return = false;
+        pre_post_order_apply(
+                *driver.root,
+                [&scopes, &inside_while_scope, &require_return, &has_return, &return_type](const auto &node) {
+                    if (node.type == ASTNodeType::whilestatement) {
+                        inside_while_scope++;
+                    }
+                    if (node.type == ASTNodeType::functiondeclaration) {
+                        auto symbol = node.template get_attribute<SymbolTableEntry *>("ste");
+                        return_type = symbol->function->return_type;
+                        require_return = return_type != "void";
+                        has_return = false;
+                    }
+                    return true;
+                },
+                [&scopes, &inside_while_scope, &require_return, &has_return, &return_type](auto &node) {
+
+                    if (node.type == ASTNodeType::functiondeclaration) {
+                        if (require_return && !has_return) {
+                            error(node.template get_attribute<yy::location>("location"),
+                                  " function requires return statement.");
+                        }
+                    }
+                    if (node.type == ASTNodeType::breakstatement) {
+                        if (inside_while_scope <= 0) {
+                            error(node.template get_attribute<yy::location>("location"),
+                                  " break statement must be inside of a while loop.");
+                        }
+                    }
+                    if (node.type == ASTNodeType::whilestatement) {
+                        inside_while_scope--;
+                    }
+
+                    if (node.type == ASTNodeType::returnstatement) {
+                        has_return = true;
+                        auto has_value = !node.children().empty();
+                        if (!has_value) {
+                            if (return_type != "void") {
+                                error(node.template get_attribute<yy::location>("location"), " expected return type.");
+                            }
+                        } else {
+                            auto return_statement_type = node[0].template get_attribute<std::string>("type");
+                            if (return_type != return_statement_type) {
+                                error(node.template get_attribute<yy::location>("location"),
+                                      " mismatched return type.");
+                            }
+                        }
+
+                    }
+                });
+
     }
     catch (const char *e) {
         error(e);

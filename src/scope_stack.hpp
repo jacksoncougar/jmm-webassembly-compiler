@@ -5,6 +5,7 @@
 #ifndef SCANNER_SCOPESTACK_HPP
 #define SCANNER_SCOPESTACK_HPP
 
+#include <utility>
 #include <vector>
 #include <map>
 #include <memory>
@@ -53,13 +54,15 @@ struct SymbolTableEntry {
     std::string value;
     std::string type;
     yy::location location;
+    FunctionSymbolTableEntry *function;
 
-    std::unique_ptr<FunctionSymbolTableEntry> function;
+    SymbolTableEntry(const std::string &identifier, const std::string &value, const std::string &type,
+                     const yy::location &location, FunctionSymbolTableEntry *function)
+            : identifier(identifier), value(value), type(type), location(location), function(function) {}
 
     friend std::ostream &operator<<(std::ostream &out, SymbolTableEntry &entry) {
         out << std::setw(10) << entry.identifier << std::setw(10) << entry.type << std::setw(10) << entry.value;
-        if(entry.function)
-        {
+        if (entry.function) {
             out << *entry.function;
         }
         return out;
@@ -71,12 +74,12 @@ class ScopeStack {
     std::vector<std::map<std::string, std::variant<SymbolTableEntry *, FunctionSymbolTableEntry *>>> scopes;
 public:
     void open_new_scope() {
-        std::cout << "[Scope]\tOpening scope\n";
+        //std::cout << "[Scope]\tOpening scope\n";
         scopes.emplace_back(); // push back an empty map
     }
 
     void close_top_scope() {
-        std::cout << "[Scope]\tClosing scope\n";
+        //std::cout << "[Scope]\tClosing scope\n";
         if (!scopes.empty()) {
             scopes.pop_back();
         }
@@ -112,7 +115,9 @@ public:
         auto ptr = unique_ptr.get();
         entries.emplace_back(std::move(unique_ptr));
         auto[it, emplace] = scopes.back().emplace(anIdentifier.name, ptr); // add an empty table entry for this
-        if (!emplace) error(anIdentifier.location, " Symbol already defined '", anIdentifier.name, "'");
+        if (!emplace) {
+            error(anIdentifier.location, " Symbol already defined '", anIdentifier.name, "'");
+        }
         return ptr;
     }
 

@@ -133,8 +133,7 @@ start   : /* nothing */ { driver.root = std::make_unique<ASTNode<>>(ASTNodeType:
 }
         | globaldeclarations { driver.root =
         std::make_unique<ASTNode<>>(ASTNodeType::start, "code",
-        std::initializer_list<ASTNodeBase*>{$1});
-                               std::cout << *$$; } // print out AST
+        std::initializer_list<ASTNodeBase*>{$1}); }
         ;
 
 literal : NUMBER { $$->set_attribute("location", @$);}
@@ -159,7 +158,7 @@ globaldeclaration       : variabledeclaration
 variabledeclaration     : type identifier SEMICOLON { $$ = new ASTNode(ASTNodeType::variabledeclaration, "variable declaration", {$1, $2}); $$->set_attribute("location", @$); }
                         ;
 
-identifier              : ID { $$ = $1; $$->set_attribute("location", @$); }
+identifier              : ID { $$ = $1; $$->set_attribute("location", @$); $$->set_attribute("location", @$); }
                         ;
 
 functiondeclaration     : functionheader block 
@@ -185,7 +184,8 @@ formalparameter         : type identifier  { $$ = new ASTNode(ASTNodeType::forma
 mainfunctiondeclaration : mainfunctiondeclarator block { $$ = new ASTNode(ASTNodeType::mainfunctiondeclaration, "main function declaration", {$1, $2}); $$->set_attribute("location", @$); }
                         ;
 
-mainfunctiondeclarator  : identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE
+mainfunctiondeclarator  : identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE { $$ = new ASTNode(ASTNodeType::mainfunctiondeclarator, "function declarator", {$1}); $$->set_attribute("location", @$); }
+                        | identifier PARENTHESIS_OPEN formalparameterlist PARENTHESIS_CLOSE { $$ = new ASTNode(ASTNodeType::mainfunctiondeclarator, "function declarator", {$1, $3}); $$->set_attribute("location", @$); }
                         ;
 
 block                   : BRACE_OPEN blockstatements BRACE_CLOSE { $$ = new ASTNode(ASTNodeType::block, "block", {$2}); $$->set_attribute("location", @$); }
@@ -201,10 +201,10 @@ blockstatement          : variabledeclaration
                         ;
 
 statement               : block
-                        | SEMICOLON { $$ = new ASTNode(ASTNodeType::statement, "empty statement"); $$->set_attribute("location", @$); }
-                        | statementexpression SEMICOLON { $$ = $1; $$->set_attribute("location", @$); }
-                        | BREAK SEMICOLON { $$ = new ASTNode(ASTNodeType::breakstatement, "break"); }
-                        | RETURN expression SEMICOLON { $$ = new ASTNode(ASTNodeType::returnstatement, "return", {$2}); }
+                        | SEMICOLON { $$ = new ASTNode(ASTNodeType::statement, "empty statement"); $$->set_attribute("location", @$); $$->set_attribute("location", @$); }
+                        | statementexpression SEMICOLON { $$ = $1; $$->set_attribute("location", @$); $$->set_attribute("location", @$); }
+                        | BREAK SEMICOLON { $$ = new ASTNode(ASTNodeType::breakstatement, "break"); $$->set_attribute("location", @$); }
+                        | RETURN expression SEMICOLON { $$ = new ASTNode(ASTNodeType::returnstatement, "return", {$2}); $$->set_attribute("location", @$); }
                         | RETURN SEMICOLON { $$ = new ASTNode(ASTNodeType::returnstatement, "return"); $$->set_attribute("location", @$); }
                         | IF PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement { $$ = new ASTNode(ASTNodeType::ifstatement, "if", {$3,$5}); $$->set_attribute("location", @$); }
                         | IF PARENTHESIS_OPEN expression PARENTHESIS_CLOSE statement ELSE statement { $$ = new ASTNode(ASTNodeType::ifstatement, "if else", {$3,$5,$7}); $$->set_attribute("location", @$); }
@@ -232,8 +232,8 @@ postfixexpression       : primary
                         | identifier
                         ;
 
-unaryexpression         : MINUS unaryexpression { $$ = new ASTNode(ASTNodeType::none, "-", {$2}); $$->set_attribute("location", @$); }
-                        | NOT unaryexpression { $$ = new ASTNode(ASTNodeType::none, "!", {$2}); $$->set_attribute("location", @$); }
+unaryexpression         : MINUS unaryexpression { $$ = new ASTNode(ASTNodeType::unaryexpression, "-", {$2}); $$->set_attribute("location", @$); }
+                        | NOT unaryexpression { $$ = new ASTNode(ASTNodeType::unaryexpression, "!", {$2}); $$->set_attribute("location", @$); }
                         | postfixexpression
                         ;
 

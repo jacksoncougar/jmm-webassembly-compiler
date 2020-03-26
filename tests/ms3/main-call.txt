@@ -1,5 +1,5 @@
 main() {
-    function();     // should error main function cannot be called.
+    function();     // should not error
     main();         // should error main function cannot be called.
 }
 

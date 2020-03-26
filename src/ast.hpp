@@ -72,7 +72,6 @@ protected:
     std::map<std::string, std::variant<yy::location, std::string, int, bool, SymbolTableEntry*, FunctionSymbolTableEntry*>> attributes;
 
 public:
-    yy::location location;
     std::string name;
     ASTNodeType type = ASTNodeType::none;
 
