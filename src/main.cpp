@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
         );
 
         if (!has_main_declaration) {
-            error("No main declaration.");
+            error(driver.root->template get_attribute<yy::location>("location"), " No main declaration.");
         }
 
         typedef std::string type;
@@ -286,7 +286,7 @@ int main(int argc, char **argv) {
                         auto result_type = unary_operand_types.find({op, operand});
                         if (result_type == unary_operand_types.end()) {
                             error(node.template get_attribute<yy::location>("location"), " Type mismatch in operator '",
-                                  op, "'\n");
+                                  op, "'");
                             node.set_attribute("type", "<error-type>"s);
                         } else {
                             node.set_attribute("type", result_type->second);
@@ -301,7 +301,7 @@ int main(int argc, char **argv) {
                         auto result_type = binary_operand_types.find({op, left, right});
                         if (result_type == binary_operand_types.end()) {
                             error(node.template get_attribute<yy::location>("location"), " Type mismatch in operator '",
-                                  op, "'\n");
+                                  op, "'");
                             node.set_attribute("type", "<error-type>"s);
                         } else {
                             node.set_attribute("type", result_type->second);

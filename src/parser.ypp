@@ -129,11 +129,11 @@ int yydebug = 1;
 
 %%
 
-start   : /* nothing */ { driver.root = std::make_unique<ASTNode<>>(ASTNodeType::start, "code");
+start   : /* nothing */ { driver.root = std::make_unique<ASTNode<>>(ASTNodeType::start, "code"); driver.root->set_attribute("location", @$);
 }
         | globaldeclarations { driver.root =
         std::make_unique<ASTNode<>>(ASTNodeType::start, "code",
-        std::initializer_list<ASTNodeBase*>{$1}); }
+        std::initializer_list<ASTNodeBase*>{$1}); driver.root->set_attribute("location", @$); }
         ;
 
 literal : NUMBER { $$->set_attribute("location", @$);}
