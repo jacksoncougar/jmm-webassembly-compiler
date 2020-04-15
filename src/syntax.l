@@ -94,16 +94,9 @@ yylloc->step();
     return token::END;
 }
 <STRING>["] { BEGIN INITIAL;     
-    yylval->a = new ASTNode<
-    ASTNodeAttribute<std::string>,
-    ASTNodeAttribute<std::string>,
-    ASTNodeAttribute<int>>(
+    yylval->a = new ASTNode(
         ASTNodeType::literal,
-        "string", 
-        {}, 
-        {"name", "string"}, 
-        {"value", yytext},
-        {"lineno", yylineno}
+        "string"
     );
 
     yylval->a->set_attribute("value", std::string(yytext));
@@ -144,9 +137,9 @@ yylloc->step();
 [/][/].*             /* do nothing */
 
 true    {  
-    yylval->a = new ASTNode<ASTNodeAttribute<std::string>>(
+    yylval->a = new ASTNode(
         ASTNodeType::literal,
-        "true",{}, {"value", yytext}
+        "true"
         );
 
     yylval->a->set_attribute("value", std::string(yytext));
@@ -154,9 +147,9 @@ true    {
     return token::TRUE; }
 
 false    {  
-    yylval->a = new ASTNode<ASTNodeAttribute<std::string>>(
+    yylval->a = new ASTNode(
         ASTNodeType::literal,
-        "false",{}, {"value", yytext}
+        "false"
         );
     yylval->a->set_attribute("value", std::string(yytext));
     yylval->a->set_attribute("type", "boolean"s);
@@ -164,45 +157,27 @@ false    {
 
 {OctalLikeNumeral}  { 
     warning("treating octal-like number as decimal numeral.");
-    yylval->a = new ASTNode<
-    ASTNodeAttribute<std::string>,
-    ASTNodeAttribute<std::string>,
-    ASTNodeAttribute<int>,
-    ASTNodeAttribute<std::string>>(
+    yylval->a = new ASTNode(
         ASTNodeType::literal,
-        "int",
-        {}, 
-        {"name", "number"}, 
-        {"warning", "treating octal-like number as decimal numeral."}, 
-        {"lineno", yylineno}, 
-        {"value", yytext}
+        "int"
     );
     yylval->a->set_attribute("value", std::string(yytext));
     yylval->a->set_attribute("type", "int"s);
     return token::NUMBER; }
 
 {DecimalNumeral}    { 
-    yylval->a = new ASTNode<
-    ASTNodeAttribute<std::string>,
-    ASTNodeAttribute<int>,
-    ASTNodeAttribute<std::string>>(
+    yylval->a = new ASTNode(
         ASTNodeType::literal,
-        "int",
-        {}, 
-        {"name", "number"}, 
-        {"lineno", yylineno}, 
-        {"value", yytext}
+        "int"
     );
     yylval->a->set_attribute("value", std::string(yytext));
     yylval->a->set_attribute("type", "int"s);
     return token::NUMBER; }
 
 {Identifier}        { 
-    yylval->a = new ASTNode<
-    ASTNodeAttribute<std::string>,
-    ASTNodeAttribute<int>>(
+    yylval->a = new ASTNode(
         ASTNodeType::identifier,
-        "id", {}, {"name", ""}, {"lineno", yylineno}
+        "id"
         );
     yylval->a->set_attribute("value", std::string(yytext));
     return token::ID; }

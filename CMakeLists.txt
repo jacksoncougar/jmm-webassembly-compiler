@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.10)
 project(Scanner LANGUAGES CXX)
 
 find_package(FLEX REQUIRED)
@@ -39,13 +39,15 @@ add_executable(parser
         src/scope_stack.cpp src/scope_stack.hpp
         ${FLEX_Lex_OUTPUTS}
         ${BISON_Parser_OUTPUTS}
-        )
+        src/semantic_checker.cpp src/semantic_checker.h)
 
 target_include_directories(parser
         PUBLIC ${FLEX_INCLUDE_DIRS})
 
 target_compile_options(parser PRIVATE  -Wall -Wpedantic)
-target_link_options(parser PRIVATE  -Wall -Wpedantic)
+if (${CMAKE_VERSION} VERSION_GREATER "3.11")
+    target_link_options(parser PRIVATE -Wall -Wpedantic)
+endif ()
 
 add_custom_command(TARGET parser POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
