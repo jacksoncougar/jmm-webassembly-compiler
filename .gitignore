@@ -2,3 +2,5 @@ build/**
 .vscode/**
 /cmake-build-*
 /TEST
+/out/
+/.vs/

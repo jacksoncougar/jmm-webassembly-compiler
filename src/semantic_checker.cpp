@@ -17,6 +17,7 @@ void SemanticChecker::process(ASTNodeBase *root) {
   std::vector<std::string> type_stack;
 
   bool has_main_declaration = false;
+
   // pass 0: process global decls
   pre_post_order_apply(
       *root,

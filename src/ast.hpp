@@ -18,7 +18,8 @@
 #include "scope_stack.hpp"
 #include <location.hh>
 
-static int tab = 0;
+[[maybe_unused]] // silence warning; this is accessed in other units.
+static int current_indentation_level = 0;
 
 std::ostream &operator<<(std::ostream &out, const class ASTNodeBase &node);
 

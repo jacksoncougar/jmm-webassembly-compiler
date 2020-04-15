@@ -38,12 +38,13 @@ struct FunctionSymbolTableEntry {
   std::vector<std::string> arg_types;
   yy::location location;
 
-  FunctionSymbolTableEntry(const std::string &functionPrototype,
-                           const std::string &returnType, int numberOfArgs,
-                           const std::vector<std::string> &argTypes,
+  FunctionSymbolTableEntry(std::string functionPrototype,
+                           std::string returnType, int numberOfArgs,
+                           std::vector<std::string> argTypes,
                            const yy::location &location)
-      : function_prototype(functionPrototype), return_type(returnType),
-        number_of_args(numberOfArgs), arg_types(argTypes), location(location) {}
+      : function_prototype(std::move(functionPrototype)),
+        return_type(std::move(returnType)), number_of_args(numberOfArgs),
+        arg_types(std::move(argTypes)), location(location) {}
 
   friend std::ostream &operator<<(std::ostream &out,
                                   FunctionSymbolTableEntry &entry) {
@@ -58,11 +59,11 @@ struct SymbolTableEntry {
   yy::location location;
   FunctionSymbolTableEntry *function;
 
-  SymbolTableEntry(const std::string &identifier, const std::string &value,
-                   const std::string &type, const yy::location &location,
+  SymbolTableEntry(std::string identifier, std::string value, std::string type,
+                   const yy::location &location,
                    FunctionSymbolTableEntry *function)
-      : identifier(identifier), value(value), type(type), location(location),
-        function(function) {}
+      : identifier(std::move(identifier)), value(std::move(value)),
+        type(std::move(type)), location(location), function(function) {}
 
   friend std::ostream &operator<<(std::ostream &out, SymbolTableEntry &entry) {
     out << std::setw(10) << entry.identifier << std::setw(10) << entry.type
@@ -75,21 +76,23 @@ struct SymbolTableEntry {
 };
 
 class ScopeStack {
+
+  // these are the symbol table entries for identifiers in all scopes.
   std::vector<std::variant<std::unique_ptr<SymbolTableEntry>,
                            std::unique_ptr<FunctionSymbolTableEntry>>>
       entries;
+
+  // scope stack impl.
   std::vector<std::map<std::string, std::variant<SymbolTableEntry *,
                                                  FunctionSymbolTableEntry *>>>
       scopes;
 
 public:
   void open_new_scope() {
-    // std::cout << "[Scope]\tOpening scope\n";
     scopes.emplace_back(); // push back an empty map
   }
 
   void close_top_scope() {
-    // std::cout << "[Scope]\tClosing scope\n";
     if (!scopes.empty()) {
       scopes.pop_back();
     }
@@ -103,8 +106,8 @@ public:
     int index = 0;
     for (const auto &scope : stack.scopes) {
       out << "Scope " << index++ << ":\n";
-      for (auto &[name, value] : scope) {
-        std::visit([&out](auto &e) { out << ": " << *e << "\n"; }, value);
+      for (auto &it : scope) {
+        std::visit([&out](auto &e) { out << ": " << *e << "\n"; }, it.second);
       }
     }
 
@@ -116,20 +119,28 @@ public:
     return out;
   }
 
-  SymbolTableEntry *define(Identifier anIdentifier, SymbolTableEntry entry) {
+  SymbolTableEntry *define(const Identifier &anIdentifier,
+                           SymbolTableEntry entry) {
+
+    // wth...
     auto unique_ptr = std::make_unique<SymbolTableEntry>(std::move(entry));
     auto ptr = unique_ptr.get();
     entries.emplace_back(std::move(unique_ptr));
-    auto [it, emplace] = scopes.back().emplace(
+
+    auto [_, identifier_is_unique] = scopes.back().emplace(
         anIdentifier.name, ptr); // add an empty table entry for this
-    if (!emplace) {
+    // ignore unused variable warning (remove this when moving to c++ 20)
+    (void)_;
+
+    if (!identifier_is_unique) {
       error(anIdentifier.location, " Symbol already defined '",
             anIdentifier.name, "'");
     }
+
     return ptr;
   }
 
-  SymbolTableEntry *lookup(Identifier anIdentifier) {
+  SymbolTableEntry *lookup(const Identifier &anIdentifier) {
 
     for (auto &scope : scopes) {
       auto it = scope.find(anIdentifier.name);

@@ -2,15 +2,11 @@
 <project version="4">
   <component name="PublishConfigData" serverName="linux.cpsc.ucalgary.ca (abe1d1f4-20ae-469c-bd9f-b74e2bafd4bb)" createEmptyFolders="true" filePermissions="420" folderPermissions="493">
     <serverData>
-      <paths name="linux.cpsc.ucalgary.ca (abe1d1f4-20ae-469c-bd9f-b74e2bafd4bb)">
+      <paths name="WSL (b99bd75a-b549-4275-9e22-5829bb6e43df)">
         <serverdata>
           <mappings>
-            <mapping deploy="/tmp/tmp.1j2DfjsPSX" local="$PROJECT_DIR$" />
+            <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
-          <excludedPaths>
-            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-linuxcpscucalgaryca" />
-            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-linuxcpscucalgaryca" />
-          </excludedPaths>
         </serverdata>
       </paths>
     </serverData>

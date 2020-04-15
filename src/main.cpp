@@ -7,14 +7,18 @@
 #include <string>
 #include <utility>
 
+#include "code_generator.h"
 #include "driver.h"
+#include "semantic_checker.h"
 #include "tokens.h"
 
 using namespace std::literals::string_literals;
 
 struct ProgramException : public std::exception {
+
   explicit ProgramException(std::string message)
       : message(std::move(message)) {}
+
   std::string message;
   [[nodiscard]] const char *what() const noexcept override {
     return message.c_str();
@@ -44,15 +48,14 @@ int main(int argc, char **argv) {
     driver.streamname = argv[1]; // for printing errors
     driver.parse_stream(ifs);
 
-    // semantic checking...
-    // SemanticChecker sc;
-    // sc.process(driver.root.get());
+    SemanticChecker sc;
+    sc.process(driver.root.get());
 
-  } catch (const char *e) {
-    error(e);
-    exit(1);
-  } catch (const std::string &e) {
-    error(e);
+    CodeGenerator cg(std::cout);
+    cg.generate_webasm_code(driver.root.get());
+
+  } catch (ProgramException &e) {
+    error(e.what());
     exit(1);
   }
 

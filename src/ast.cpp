@@ -41,7 +41,7 @@ bool pre_post_order_apply(
 
 std::ostream &ASTNode::print(std::ostream &out) const {
 
-  out << std::string(tab, ' ') << "(" << name;
+  out << std::string(current_indentation_level, ' ') << "(" << name;
   if (!attributes.empty()) {
     out << " (attributes (";
     auto it = attributes.begin();
@@ -60,7 +60,7 @@ std::ostream &ASTNode::print(std::ostream &out) const {
   }
 
   out << ")\n";
-  tab++;
+  current_indentation_level++;
 
   auto &children = this->children();
   if (!children.empty()) {
@@ -69,6 +69,6 @@ std::ostream &ASTNode::print(std::ostream &out) const {
         out << *n;
     }
   }
-  tab--;
+  current_indentation_level--;
   return out;
 }
