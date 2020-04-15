@@ -69,6 +69,7 @@ void SemanticChecker::process(ASTNodeBase *root) {
           node.set_attribute("processed", true);
           auto return_type = node[0][0].name;
           auto id = node[0][1][0].template get_attribute<std::string>("value");
+          node.set_attribute("name", id);
 
           std::vector<std::string> params;
           if (node[0][1].children().size() > 1) {

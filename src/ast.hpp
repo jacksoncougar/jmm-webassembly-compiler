@@ -115,17 +115,6 @@ public:
   }
 };
 
-template <typename T> struct ASTNodeAttribute {
-  std::string label;
-  T value;
-
-  friend std::ostream &operator<<(std::ostream &out,
-                                  const ASTNodeAttribute &node) {
-    out << node.label << ": " << node.value;
-    return out;
-  }
-};
-
 class ASTNode : public ASTNodeBase {
 public:
   ASTNode(ASTNodeType type, std::string name,

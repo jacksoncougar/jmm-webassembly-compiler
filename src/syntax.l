@@ -13,7 +13,7 @@
 #include "tokens.h"
 #include "parser.hpp"
 
-    using namespace std::string_literals;
+using namespace std::string_literals;
 
 int yylineno = 1;
 int warningno = 0;
@@ -42,6 +42,7 @@ Identifier              [_[:alpha:]][_[:alnum:]]*
   * Java DecimalNumeral exactly--this will match octals as two consecutive 
   * numbers which I will not issue a warning or error for in the scanner.
   */
+
 DecimalNumeral          (0|{NonZeroDigit}{Digits}?|{NonZeroDigit}{Underscores}{Digits})
 Digits                  ({Digit}|{Digit}{DigitsAndUnderscores}?{Digit})
 Digit                   [0-9]

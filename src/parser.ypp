@@ -181,7 +181,11 @@ formalparameterlist     : formalparameter  { $$ = new ASTNode(ASTNodeType::forma
 formalparameter         : type identifier  { $$ = new ASTNode(ASTNodeType::formalparameter, "formal parameter", {$1, $2}); $$->set_attribute("location", @$); }
                         ;
 
-mainfunctiondeclaration : mainfunctiondeclarator block { $$ = new ASTNode(ASTNodeType::mainfunctiondeclaration, "main function declaration", {$1, $2}); $$->set_attribute("location", @$); }
+mainfunctiondeclaration : mainfunctiondeclarator block { \
+                        $$ = new ASTNode(ASTNodeType::mainfunctiondeclaration, "main function declaration", {$1, $2});
+                        $$->set_attribute("location", @$);
+                        $$->set_attribute("main_decl", true);
+                        }
                         ;
 
 mainfunctiondeclarator  : identifier PARENTHESIS_OPEN PARENTHESIS_CLOSE { $$ = new ASTNode(ASTNodeType::mainfunctiondeclarator, "function declarator", {$1}); $$->set_attribute("location", @$); }

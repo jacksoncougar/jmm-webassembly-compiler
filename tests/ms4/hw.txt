@@ -1,3 +1,5 @@
+void test(int p) {}
+
 main() {
     // hello world
 }
