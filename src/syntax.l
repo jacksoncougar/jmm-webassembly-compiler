@@ -117,7 +117,9 @@ yylloc->step();
 "*" { return token::MULTIPLY; }
 "/" { return token::DIVIDE; }
 "%" { return token::MODULO; }
+
 "=" { return token::ASSIGNMENT; }
+
 "!" { return token::NOT; }
 "<" { return token::LT; }
 ">" { return token::GT; }

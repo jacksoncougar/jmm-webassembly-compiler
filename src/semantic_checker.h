@@ -11,7 +11,8 @@ using namespace std::literals::string_literals;
 
 class SemanticChecker {
 public:
-  void process(ASTNodeBase *root);
+    ScopeStack scopes;
+    void process(ASTNodeBase *root);
 };
 
 #endif // SCANNER_SEMANTIC_CHECKER_H

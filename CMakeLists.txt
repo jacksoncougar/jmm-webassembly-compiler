@@ -9,6 +9,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 file(COPY tests DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
 
+configure_file(tests/ms4/hw.txt ${CMAKE_CURRENT_BINARY_DIR}/tests/ms4/hw.txt COPYONLY)
+
 bison_target(
         Parser
         ${CMAKE_CURRENT_SOURCE_DIR}/src/parser.ypp
@@ -44,7 +46,7 @@ add_executable(parser
 target_include_directories(parser
         PUBLIC ${FLEX_INCLUDE_DIRS})
 
-target_compile_options(parser PRIVATE  -Wall -Wpedantic)
+target_compile_options(parser PRIVATE -Wall -Wpedantic)
 if (${CMAKE_VERSION} VERSION_GREATER "3.11")
     target_link_options(parser PRIVATE -Wall -Wpedantic)
 endif ()

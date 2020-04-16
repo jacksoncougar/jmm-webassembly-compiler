@@ -17,14 +17,14 @@ template<typename... Args>
 void warning(Args... args) {
     std::cerr << warning_label;
     (std::cerr << ... << args); // c++ fold
-    std::cerr << std::endl;
+    std::cerr << '\n';
 }
 
 template<typename... Args>
 void error(Args... args) {
     std::cerr << error_label;
     (std::cerr << ... << args); // c++ fold
-    std::cerr << std::endl;
+    std::cerr << '\n';
 }
 
 struct TokenAttributes {

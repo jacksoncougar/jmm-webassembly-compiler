@@ -58,6 +58,7 @@ struct SymbolTableEntry {
   std::string type;
   yy::location location;
   FunctionSymbolTableEntry *function;
+  std::map<std::string, std::string> data;
 
   SymbolTableEntry(std::string identifier, std::string value, std::string type,
                    const yy::location &location,

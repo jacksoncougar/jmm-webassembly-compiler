@@ -45,16 +45,17 @@ int main(int argc, char **argv) {
     }
 
     yy::Driver driver;
-    driver.streamname = argv[1]; // for printing errors
+    driver.streamname = argv[1];// for printing errors
     driver.parse_stream(ifs);
 
     SemanticChecker sc;
     sc.process(driver.root.get());
 
-    CodeGenerator cg(std::cout);
+    std::ofstream out("result.wat");
+    CodeGenerator cg(out);
     cg.generate_webasm_code(driver.root.get());
-
-  } catch (ProgramException &e) {
+  }
+  catch (ProgramException &e) {
     error(e.what());
     exit(1);
   }
