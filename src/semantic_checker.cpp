@@ -16,6 +16,82 @@ void SemanticChecker::process(ASTNodeBase *root)
   scopes.open_new_scope();
   std::vector<std::string> type_stack;
 
+  auto putchar_ste = SymbolTableEntry{
+          "putchar", "", "function",
+          yy::location(),
+          new FunctionSymbolTableEntry{
+                  "void putchar (int)",
+                  "void",
+                  1,
+                  {"int"},
+                  yy::location()}};
+  auto getchar_ste = SymbolTableEntry{
+          "getchar", "", "function",
+          yy::location(),
+          new FunctionSymbolTableEntry{
+                  "int getchar ()",
+                  "int",
+                  0,
+                  {},
+                  yy::location()}};
+  auto exit_ste = SymbolTableEntry{
+          "exit", "", "function",
+          yy::location(),
+          new FunctionSymbolTableEntry{
+                  "void exit ()",
+                  "void",
+                  0,
+                  {},
+                  yy::location()}};
+
+  auto printi_ste = SymbolTableEntry{
+          "printi", "", "function",
+          yy::location(),
+          new FunctionSymbolTableEntry{
+                  "void printi (int)",
+                  "void",
+                  1,
+                  {"int"},
+                  yy::location()}};
+  auto printc_ste = SymbolTableEntry{
+          "printc", "", "function",
+          yy::location(),
+          new FunctionSymbolTableEntry{
+                  "void printc (int)",
+                  "void",
+                  1,
+                  {"int"},
+                  yy::location()}};
+  auto printb_ste = SymbolTableEntry{
+          "printb", "", "function",
+          yy::location(),
+          new FunctionSymbolTableEntry{
+                  "void printb (int)",
+                  "void",
+                  1,
+                  {"int"},
+                  yy::location()}};
+  auto prints_ste = SymbolTableEntry{
+          "prints", "", "function",
+          yy::location(),
+          new FunctionSymbolTableEntry{
+                  "void prints (string)",
+                  "void",
+                  1,
+                  {"string"},
+                  yy::location()}};
+
+  scopes.define(Identifier{"putchar"}, putchar_ste);
+  scopes.define(Identifier{"getchar"}, getchar_ste);
+  scopes.define(Identifier{"exit"}, exit_ste);
+
+  scopes.define(Identifier{"printi"}, printi_ste);
+  scopes.define(Identifier{"printc"}, printc_ste);
+  scopes.define(Identifier{"printb"}, printb_ste);
+  scopes.define(Identifier{"prints"}, prints_ste);
+
+  scopes.open_new_scope();
+
   bool has_main_declaration = false;
 
   // pass 0: process global decls
@@ -106,7 +182,7 @@ void SemanticChecker::process(ASTNodeBase *root)
             }
           });
 
-  if (!has_main_declaration)
+  if (!has_main_declaration && !runtime_library)
   {
     error(root->template get_attribute<yy::location>("location"),
           " No main declaration.");
@@ -129,13 +205,13 @@ void SemanticChecker::process(ASTNodeBase *root)
           {{"/", "int", "int"}, "int"},
           {{"%", "int", "int"}, "int"},
 
-          {{"<", "int", "int"}, "int"},
-          {{"<=", "int", "int"}, "int"},
-          {{">", "int", "int"}, "int"},
-          {{">=", "int", "int"}, "int"},
+          {{"<", "int", "int"}, "boolean"},
+          {{"<=", "int", "int"}, "boolean"},
+          {{">", "int", "int"}, "boolean"},
+          {{">=", "int", "int"}, "boolean"},
 
-          {{"==", "int", "int"}, "int"},
-          {{"!=", "int", "int"}, "int"},
+          {{"==", "int", "int"}, "boolean"},
+          {{"!=", "int", "int"}, "boolean"},
           {{"==", "boolean", "boolean"}, "boolean"},
           {{"!=", "boolean", "boolean"}, "boolean"},
 

@@ -11,6 +11,7 @@ using namespace std::literals::string_literals;
 
 class SemanticChecker {
 public:
+    bool runtime_library = false;
     ScopeStack scopes;
     void process(ASTNodeBase *root);
 };

@@ -41,7 +41,7 @@ add_executable(parser
         src/scope_stack.cpp src/scope_stack.hpp
         ${FLEX_Lex_OUTPUTS}
         ${BISON_Parser_OUTPUTS}
-        src/semantic_checker.cpp src/semantic_checker.h src/code_generator.cpp src/code_generator.h)
+        src/semantic_checker.cpp src/semantic_checker.h src/code_generator.cpp src/code_generator.h src/runtime_library.cpp src/runtime_library.h)
 
 target_include_directories(parser
         PUBLIC ${FLEX_INCLUDE_DIRS})

@@ -16,9 +16,8 @@ struct Template
 
   Template(std::string t) : template_string(std::move(t)){};
 
-  Template(std::string t, std::initializer_list<std::string> args) : template_string(std::move(t))
+  Template(std::string_view t, std::initializer_list<std::string_view> args) : template_string(std::move(t))
   {
-
     for (const auto &param : args)
     {
       auto start = template_string.find('{');
