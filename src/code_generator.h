@@ -540,6 +540,13 @@ struct CodeGenerator// lambda soup; bring crackers.
 
         break;
       case ASTNodeType::functiondeclaration:
+        // insert a default return for all functions just in case somebody
+        // calls halt in the middle of the damn function mmmkay.
+        if (node->get_attribute<SymbolTableEntry *>("symbol")->function->return_type == "int")
+        {
+          generate_code("i32.const 0", {}, endline);
+          generate_code("return", {}, endline);
+        }
         close_scope();
         newline();
         break;
@@ -641,7 +648,6 @@ struct CodeGenerator// lambda soup; bring crackers.
                  if (expression.name == "-")// integer constant
                  {
                    generate_comment("unaryexpression negation", {}, endline);
-                   generate_code("{op} {value}", {"i32.const", "0"}, endline);
                  }
                  else if (expression.name == "!")// integer constant
                  {
@@ -691,7 +697,10 @@ struct CodeGenerator// lambda soup; bring crackers.
                 case ASTNodeType::unaryexpression:
                   if (expression.name == "-")
                   {
-                    generate_code("{op}", {"i32.sub"}, endline);
+                    generate_code("{op}", {"i32.const -1"}, endline);
+                    generate_code("{op}", {"i32.xor"}, endline);
+                    generate_code("{op}", {"i32.const 1"}, endline);
+                    generate_code("{op}", {"i32.add"}, endline);
                     generate_comment("end negation", {}, endline);
                   }
                   else if (expression.name == "!")// integer constant

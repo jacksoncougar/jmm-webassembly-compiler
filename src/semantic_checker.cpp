@@ -35,10 +35,10 @@ void SemanticChecker::process(ASTNodeBase *root)
                   {},
                   yy::location()}};
   auto exit_ste = SymbolTableEntry{
-          "exit", "", "function",
+          "halt", "", "function",
           yy::location(),
           new FunctionSymbolTableEntry{
-                  "void exit ()",
+                  "void halt ()",
                   "void",
                   0,
                   {},
@@ -83,7 +83,7 @@ void SemanticChecker::process(ASTNodeBase *root)
 
   scopes.define(Identifier{"putchar"}, putchar_ste);
   scopes.define(Identifier{"getchar"}, getchar_ste);
-  scopes.define(Identifier{"exit"}, exit_ste);
+  scopes.define(Identifier{"halt"}, exit_ste);
 
   scopes.define(Identifier{"printi"}, printi_ste);
   scopes.define(Identifier{"printc"}, printc_ste);
