@@ -88,11 +88,14 @@ foreach (test ${TEST_FILES})
     if (${VAR} GREATER 0)
         MATH(EXPR PREVIOUS "${VAR}-1")
     endif ()
+    get_filename_component(OUT ${test} NAME)
     add_custom_target(test-${VAR}
-            COMMAND echo "Running test '${test}'"
             COMMAND echo "\n"
-            COMMAND parser ${test}
-            COMMAND ${CMAKE_CURRENT_LIST_DIR}/uat.sh ${CMAKE_CURRENT_BINARY_DIR}/result.wat
+            COMMAND echo "\n"
+            COMMAND echo "Running test '${test}'"
+            COMMAND echo parser ${test} > ${OUT}.wat
+            COMMAND parser ${test} > ${OUT}.wat
+            COMMAND ${CMAKE_CURRENT_LIST_DIR}/uat.sh ${OUT}.wat
             echo console.txt
             )
     if (${VAR} GREATER 0)

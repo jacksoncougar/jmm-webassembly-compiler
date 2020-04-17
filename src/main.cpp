@@ -51,8 +51,7 @@ int main(int argc, char **argv) {
     SemanticChecker sc;
     sc.process(driver.root.get());
 
-    std::ofstream out("result.wat");
-    CodeGenerator cg(out);
+    CodeGenerator cg(std::cout);
     cg.generate_webasm_code(driver.root.get());
   }
   catch (ProgramException &e) {
