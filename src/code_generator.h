@@ -10,6 +10,7 @@
 #include "semantic_checker.h"
 #include "template.hpp"
 #include <ostream>
+#include <regex>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -106,8 +107,13 @@ struct CodeGenerator// lambda soup; bring crackers.
 
   std::string trim(std::string string)
   {
+    static std::regex bell("\\\\b");
+    static std::regex formfeed("\\\\f");
     // remove quotations marks.
-    return string.substr(1, string.size() - 2);
+    auto value = string.substr(1, string.size() - 2);
+    value = std::regex_replace(value, bell, "0x07"s);
+    value = std::regex_replace(value, formfeed, "0x0C"s);
+    return value;
   }
 
   struct Indent
@@ -162,6 +168,7 @@ struct CodeGenerator// lambda soup; bring crackers.
     destination << Indent(*this) << ((options & align) ? std::string(std::max(0, 40 - current_column_position), ' ') : "")
                 << ";;" << Template(format, args);
     if (options & endline) newline();
+    destination.out.flush();
   }
 
   void generate_code(std::string_view format,
@@ -170,9 +177,10 @@ struct CodeGenerator// lambda soup; bring crackers.
   {
     destination << Indent(*this) << Template(format, args);
     if (options & endline) newline();
+    destination.out.flush();
   }
 
-  bool generate_locals(ASTNodeBase &node)
+  bool generate_params(ASTNodeBase &node)
   {
     switch (node.type)
     {
@@ -195,7 +203,14 @@ struct CodeGenerator// lambda soup; bring crackers.
         close_scope();
         generate_comment(node.get_attribute<std::string>("name").c_str());
       }
-      break;
+    }
+    return true;
+  }
+
+  bool generate_locals(ASTNodeBase &node)
+  {
+    switch (node.type)
+    {
       case ASTNodeType::variabledeclaration:
       {
         open_scope();
@@ -382,6 +397,7 @@ struct CodeGenerator// lambda soup; bring crackers.
         {
           generate_expression_code(node->children()[0].get());
         }
+        return false;// don't descend into children.
       };
       break;
 
@@ -393,6 +409,7 @@ struct CodeGenerator// lambda soup; bring crackers.
         open_scope();
         generate_code("func ${id}", {id}, endline);
 
+        pre_order_apply(*node, [&](ASTNodeBase &n) { generate_params(n); });
         pre_order_apply(*node, [&](ASTNodeBase &n) { generate_locals(n); });
       }
       break;
@@ -408,6 +425,7 @@ struct CodeGenerator// lambda soup; bring crackers.
         open_scope();
         generate_code("func $main", {}, endline);
 
+        pre_order_apply(*node, [&](ASTNodeBase &n) { generate_params(n); });
         pre_order_apply(*node, [&](ASTNodeBase &n) { generate_locals(n); });
       }
       break;
@@ -419,14 +437,28 @@ struct CodeGenerator// lambda soup; bring crackers.
         // lhs = result of rhs...
         auto lhs = node->children()[0].get();
         auto rhs = node->children()[1].get();
+
         generate_expression_code(rhs);
 
         // assign that result to the lhs identifier...
-        generate_code("{op} {lhs}",
-                      {is_global_id(*lhs) ? "global.set" : "local.set",
-                       lhs->get_attribute<SymbolTableEntry *>("symbol")
-                               ->data.at("asm_identifier")},
-                      endline);
+        // if lhs is a rvalue
+        if (lhs->type == ASTNodeType::identifier)
+        {
+          generate_code("{op} {lhs}",
+                        {is_global_id(*lhs) ? "global.set" : "local.set",
+                         lhs->get_attribute<SymbolTableEntry *>("symbol")
+                                 ->data.at("asm_identifier")},
+                        endline);
+        }
+        else if (lhs->type == ASTNodeType::functioninvocation)
+        {
+          // can we assume that the value is on the stack?
+        }
+        else
+        {
+          note("Unhandled case '" + node->name + "' in '" +
+               __FUNCTION__ + "':" + std::to_string(__LINE__));
+        }
 
 
         return false;// don't descend into children.

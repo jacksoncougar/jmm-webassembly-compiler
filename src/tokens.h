@@ -14,6 +14,7 @@ const std::string note_label = "Note: ";
 const std::string warning_label = "Warning: ";
 const std::string error_label = "Error: ";
 
+#define TAKE_NOTES
 #ifdef TAKE_NOTES
 template<typename... Args>
 void note(Args... args)

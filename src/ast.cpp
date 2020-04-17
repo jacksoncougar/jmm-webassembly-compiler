@@ -31,8 +31,11 @@ bool pre_post_order_apply(
   // post order function on every visited node.
   auto continue_traversal = pre_order_function(root);
   if (continue_traversal) {
-    for (auto &child : root.children()) {
-      pre_post_order_apply(*child, pre_order_function, post_order_function);
+    for (auto &child : root.children())
+    {
+      auto result = pre_post_order_apply(*child, pre_order_function, post_order_function);
+      // don't traverse siblings after a return statement.
+      if (!result && child->type == ASTNodeType::returnstatement) break;
     }
   }
   post_order_function(root);

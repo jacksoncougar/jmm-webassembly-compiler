@@ -38,6 +38,7 @@ configure_file(tests/ms4/gen.t31 ${CMAKE_CURRENT_BINARY_DIR}/tests/ms4/gen.t31 C
 configure_file(tests/ms4/gen.t32 ${CMAKE_CURRENT_BINARY_DIR}/tests/ms4/gen.t32 COPYONLY)
 configure_file(tests/ms4/gen.t33 ${CMAKE_CURRENT_BINARY_DIR}/tests/ms4/gen.t33 COPYONLY)
 configure_file(tests/ms4/gen.t34 ${CMAKE_CURRENT_BINARY_DIR}/tests/ms4/gen.t34 COPYONLY)
+configure_file(tests/ms4/more-random.txt ${CMAKE_CURRENT_BINARY_DIR}/tests/ms4/more-random.txt COPYONLY)
 
 bison_target(
         Parser
