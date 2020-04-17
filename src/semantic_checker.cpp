@@ -66,10 +66,10 @@ void SemanticChecker::process(ASTNodeBase *root)
           "printb", "", "function",
           yy::location(),
           new FunctionSymbolTableEntry{
-                  "void printb (int)",
+                  "void printb (boolean)",
                   "void",
                   1,
-                  {"int"},
+                  {"boolean"},
                   yy::location()}};
   auto prints_ste = SymbolTableEntry{
           "prints", "", "function",

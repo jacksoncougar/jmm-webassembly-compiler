@@ -297,8 +297,8 @@ struct CodeGenerator// lambda soup; bring crackers.
     constexpr auto printc_source = R"(void printc(int c) {
   putchar(c);
 })";
-    constexpr auto printb_source = R"(void printb(int b) {
-  if(b != 0) prints("true");
+    constexpr auto printb_source = R"(void printb(boolean b) {
+  if(b) prints("true");
   else prints("false");
 })";
 
@@ -486,8 +486,8 @@ struct CodeGenerator// lambda soup; bring crackers.
         return false;// don't descend into children.
       }
       default:
-        // do some sanity checking while debugging...
-        warning("Unhandled case '" + node->name + "' in '" + __FUNCTION__ + "'");
+        note("Unhandled case '" + node->name + "' in '" +
+             __FUNCTION__ + "':" + std::to_string(__LINE__));
     }
 
     return true;// descend into children.
@@ -589,6 +589,7 @@ struct CodeGenerator// lambda soup; bring crackers.
                   {functioninvocation.get_attribute<SymbolTableEntry *>("symbol")->identifier}, endline);
   }
 
+
   void generate_expression_code(ASTNodeBase *expression)
   {
     // walk the expression tree from the bottom up building up asm
@@ -600,7 +601,7 @@ struct CodeGenerator// lambda soup; bring crackers.
                case ASTNodeType::functioninvocation:
                  generate_function_call(expression);
                  return false;// don't descend into children.
-                 break;
+
                case ASTNodeType::unaryexpression:
                {
                  if (expression.name == "-")// integer constant
@@ -611,6 +612,11 @@ struct CodeGenerator// lambda soup; bring crackers.
                  else if (expression.name == "!")// integer constant
                  {
                    generate_comment("boolean negation", {}, endline);
+                 }
+                 else
+                 {
+                   note("Unhandled case '" + expression.name + "' in '" +
+                        function_name + "':" + std::to_string(__LINE__));
                  }
                }
                break;
@@ -642,6 +648,11 @@ struct CodeGenerator// lambda soup; bring crackers.
                     generate_code("{op}", {"i32.rem_u"}, endline);
                     generate_comment("end negation", {}, endline);
                   }
+                  else
+                  {
+                    note("Unhandled case '" + expression.name + "' in '" +
+                         function_name + "':" + std::to_string(__LINE__));
+                  }
                   break;
 
                 case ASTNodeType::infixoperator:
@@ -661,6 +672,11 @@ struct CodeGenerator// lambda soup; bring crackers.
                     generate_code("{type}.{op}", {type_of_result, asm_conditional_operations[expression.name]}, endline);
 
                     // result is now on the stack.,
+                  }
+                  else
+                  {
+                    note("Unhandled case '" + expression.name + "' in '" +
+                         function_name + "':" + std::to_string(__LINE__));
                   }
                   break;
 
@@ -687,6 +703,11 @@ struct CodeGenerator// lambda soup; bring crackers.
                                   {"i32.const", value});
                     generate_comment("boolean " + expression.name, {}, endline);
                   }
+                  else
+                  {
+                    note("Unhandled case '" + expression.name + "' in '" +
+                         function_name + "':" + std::to_string(__LINE__));
+                  }
                   break;
                 case ASTNodeType::identifier:
                 {
@@ -697,13 +718,17 @@ struct CodeGenerator// lambda soup; bring crackers.
                                    get_identifier_of(expression)},
                                   endline);
                   }
+                  else
+                  {
+                    note("Unhandled case '" + expression.name + "' in '" +
+                         function_name + "':" + std::to_string(__LINE__));
+                  }
                 }
                 break;
                 default:
                 {
-                  // do some sanity checking while debugging...
-                  error("Unhandled case '" + expression.name + "' in '" +
-                        function_name + "'");
+                  note("Unhandled case '" + expression.name + "' in '" +
+                       function_name + "':" + std::to_string(__LINE__));
                 }
               }
             });
@@ -712,7 +737,7 @@ struct CodeGenerator// lambda soup; bring crackers.
   void generate_webasm_code(ASTNodeBase *root)
   {
 
-    warning(root);
+    note(root);
 
     generate_comment("begins auto generated .wasm code", {}, endline);
     // todo generate code...
