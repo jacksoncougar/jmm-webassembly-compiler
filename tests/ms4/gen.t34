@@ -1,22 +1,26 @@
 // should be 2903040, in case you're wondering
 
 int foo(int a, int b, int c, int d) {
+	prints("foo()\n");
 	return a * b * c * d;
 }
 
 int d;
 
 int bar(int a, int b, int c) {
+	prints("bar()\n");
         return foo(a, b, c, d-3);
 }
 
 int baz(int a) {
+	prints("baz()\n");
 	d = d + 1;
 	return a;
 }
 
 
 mane() {
+	prints("mane()\n");
 	d = 10;
 	printi(foo(1, bar(2, baz(3), 4), bar(5, baz(6), 7), baz(8)));
 	prints("\n");
