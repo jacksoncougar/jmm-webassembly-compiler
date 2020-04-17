@@ -1,0 +1,9 @@
+// test that printi works on small numbers.
+main() {
+    int a;a = 32;
+    int z;z = 127;
+    while(a <= z) {
+        printc(a);
+        a = a + 1;
+    }
+}
