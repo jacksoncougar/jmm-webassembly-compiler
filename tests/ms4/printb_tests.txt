@@ -1,0 +1,13 @@
+// test that printi works on small numbers.
+main() {
+    printb(true);
+    printc(10);
+    printb(false);
+    printc(10);
+    printb(true || false);
+    printc(10);
+    printb(true && false);
+    printc(10);
+    printb(true == false);
+    printc(10);
+}
