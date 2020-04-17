@@ -400,7 +400,19 @@ struct CodeGenerator// lambda soup; bring crackers.
         }
         generate_code("return", {}, endline);
         return false;// don't descend into children.
-      };
+      }
+
+      case ASTNodeType::breakstatement:
+      {
+        generate_code("br 3", {}, endline);
+        return false;// don't descend into children.
+      }
+
+      case ASTNodeType::block:
+      {
+        open_scope();
+        generate_code("block {label}", {asm_label()}, endline);
+      }
       break;
 
       case ASTNodeType::functiondeclaration:
@@ -435,6 +447,13 @@ struct CodeGenerator// lambda soup; bring crackers.
       break;
       case ASTNodeType::functioninvocation:
         generate_function_call(*node);
+
+        // cleanup stack if we have discarded values...
+        if (node->get_attribute<SymbolTableEntry *>("symbol")->function->return_type == "int")
+        {
+          generate_code("drop", {}, endline);
+        }
+
         return false;// don't descend into children;
       case ASTNodeType::infixoperator:
       {
@@ -550,6 +569,10 @@ struct CodeGenerator// lambda soup; bring crackers.
         close_scope();
         newline();
         break;
+      case ASTNodeType::block:
+      {
+        close_scope();
+      }
       case ASTNodeType::formalparameter:
         break;
       case ASTNodeType::variabledeclaration:
