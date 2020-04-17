@@ -17,6 +17,7 @@ configure_file(tests/ms4/printi_tests.txt ${CMAKE_CURRENT_BINARY_DIR}/tests/ms4/
 configure_file(tests/ms4/printc_tests.txt ${CMAKE_CURRENT_BINARY_DIR}/tests/ms4/printc_tests.txt COPYONLY)
 configure_file(tests/ms4/printb_tests.txt ${CMAKE_CURRENT_BINARY_DIR}/tests/ms4/printb_tests.txt COPYONLY)
 configure_file(tests/ms4/prints_tests.txt ${CMAKE_CURRENT_BINARY_DIR}/tests/ms4/prints_tests.txt COPYONLY)
+configure_file(tests/ms4/unary.txt ${CMAKE_CURRENT_BINARY_DIR}/tests/ms4/unary.txt COPYONLY)
 
 bison_target(
         Parser

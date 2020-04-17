@@ -298,7 +298,7 @@ struct CodeGenerator// lambda soup; bring crackers.
   putchar(c);
 })";
     constexpr auto printb_source = R"(void printb(int b) {
-  if(b) prints("true");
+  if(b != 0) prints("true");
   else prints("false");
 })";
 
@@ -598,67 +598,55 @@ struct CodeGenerator// lambda soup; bring crackers.
              switch (expression.type)
              {
                case ASTNodeType::functioninvocation:
-                  generate_function_call(expression);
-                  return false; // don't descend into children.
+                 generate_function_call(expression);
+                 return false;// don't descend into children.
                  break;
-               default:
-                 if (expression.name == "!")// integer constant
+               case ASTNodeType::unaryexpression:
+               {
+                 if (expression.name == "-")// integer constant
                  {
-                   // take the current value on the stack and invert it
-                   generate_code("{op} {value}", {"i32.const", "0"});
-                   generate_comment("begin negation", {}, endline);
+                   generate_comment("unaryexpression negation", {}, endline);
+                   generate_code("{op} {value}", {"i32.const", "0"}, endline);
                  }
+                 else if (expression.name == "!")// integer constant
+                 {
+                   generate_comment("boolean negation", {}, endline);
+                 }
+               }
+               break;
+               default:
+                 // do no harm.
+                 break;
              }
-              return true; },
+             return true; },
             [&, function_name = std::string(__FUNCTION__)](
                     ASTNodeBase &expression) {
               switch (expression.type)
               {
                 case ASTNodeType::functioninvocation:
-                default:
-                {
-                  if (expression.name == "int")// integer constant
-                  {
-                    generate_code("{op} {value}",
-                                  {"i32.const ", expression.get_attribute<std::string>("value")}, endline);
-                  }
-                  else if (expression.name == "true" || expression.name == "false")// integer constant
-                  {
-                    auto value = expression.get_attribute<std::string>("value") == "true"
-                                         ? "1"
-                                         : "0";
-                    generate_code("{op} {value}",
-                                  {"i32.const", value});
-                    generate_comment("boolean " + expression.name, {}, endline);
-                  }
-                  else if (expression.name == "int")// integer constant
-                  {
-                    generate_code("{op} {value}",
-                                  {"i32.const", expression.get_attribute<std::string>("value")}, endline);
-                  }
-                  else if (expression.name == "string")// integer constant
-                  {
-                    auto [offset, length] = string_table.at(trim(expression.get_attribute<std::string>("value")));
-                    generate_code("{op} {value}",
-                                  {"i32.const", std::to_string(offset)}, endline);
-                    generate_code("{op} {value}",
-                                  {"i32.const", std::to_string(length)}, endline);
-                  }
-                  else if (expression.name == "id")// integer constant
-                  {
+                  // ignore
+                  break;
 
-                    generate_code("{op} {value}",
-                                  {is_global_id(expression) ? "global.get" : "local.get",
-                                   get_identifier_of(expression)},
-                                  endline);
+                case ASTNodeType::unaryexpression:
+                  if (expression.name == "-")
+                  {
+                    generate_code("{op}", {"i32.sub"}, endline);
+                    generate_comment("end negation", {}, endline);
                   }
                   else if (expression.name == "!")// integer constant
                   {
                     // take the current value on the stack and invert it
-                    generate_code("{op}", {"i32.sub"});
-                    generate_comment("end negation");
+                    generate_code("{op} {value}", {"i32.const", "1"}, endline);
+                    generate_code("{op}", {"i32.add"}, endline);
+                    generate_code("{op} {value}", {"i32.const", "2"}, endline);
+                    generate_code("{op}", {"i32.rem_u"}, endline);
+                    generate_comment("end negation", {}, endline);
                   }
-                  else if (asm_math_operations.count(expression.name))// maths
+                  break;
+
+                case ASTNodeType::infixoperator:
+
+                  if (asm_math_operations.count(expression.name))// maths
                   {
                     auto type_of_result =
                             asm_types.at(expression.get_attribute<std::string>("type"));
@@ -674,12 +662,48 @@ struct CodeGenerator// lambda soup; bring crackers.
 
                     // result is now on the stack.,
                   }
-                  else
+                  break;
+
+                case ASTNodeType::literal:
+                  if (expression.name == "int")// integer constant
                   {
-                    // do some sanity checking while debugging...
-                    error("Unhandled case '" + expression.name + "' in '" +
-                          function_name + "'");
+                    generate_code("{op} {value}",
+                                  {"i32.const ", expression.get_attribute<std::string>("value")}, endline);
                   }
+                  else if (expression.name == "string")// integer constant
+                  {
+                    auto [offset, length] = string_table.at(trim(expression.get_attribute<std::string>("value")));
+                    generate_code("{op} {value}",
+                                  {"i32.const", std::to_string(offset)}, endline);
+                    generate_code("{op} {value}",
+                                  {"i32.const", std::to_string(length)}, endline);
+                  }
+                  if (expression.name == "true" || expression.name == "false")// integer constant
+                  {
+                    auto value = expression.get_attribute<std::string>("value") == "true"
+                                         ? "1"
+                                         : "0";
+                    generate_code("{op} {value}",
+                                  {"i32.const", value});
+                    generate_comment("boolean " + expression.name, {}, endline);
+                  }
+                  break;
+                case ASTNodeType::identifier:
+                {
+                  if (expression.name == "id")// integer constant
+                  {
+                    generate_code("{op} {value}",
+                                  {is_global_id(expression) ? "global.get" : "local.get",
+                                   get_identifier_of(expression)},
+                                  endline);
+                  }
+                }
+                break;
+                default:
+                {
+                  // do some sanity checking while debugging...
+                  error("Unhandled case '" + expression.name + "' in '" +
+                        function_name + "'");
                 }
               }
             });

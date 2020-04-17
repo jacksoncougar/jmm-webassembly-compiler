@@ -1,0 +1,42 @@
+// test that printi works on small numbers.
+main() {
+   int i;
+   i = 999;
+   i = -i;
+   printi(i);
+   printc(10);
+   i = -i;
+   printi(i);
+   printc(10);
+
+   boolean b;
+   b = true;
+   prints("b is ");
+   printb(b);
+   printc(10);
+   prints("!b is ");
+   printb(!b);
+   printc(10);
+
+   b = !b;
+   prints("!b is ");
+   printb(b);
+   printc(10);
+   prints("!!b is ");
+   printb(!b);
+   printc(10);
+
+   prints("true is ");
+   printb(true);
+   printc(10);
+   prints("false is ");
+   printb(false);
+   printc(10);
+
+   prints("!true is ");
+   printb(!true);
+   printc(10);
+   prints("!false is ");
+   printb(!false);
+   printc(10);
+}
