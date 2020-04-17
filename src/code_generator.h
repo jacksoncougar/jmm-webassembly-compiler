@@ -180,15 +180,16 @@ struct CodeGenerator// lambda soup; bring crackers.
     destination.out.flush();
   }
 
-  bool generate_params(ASTNodeBase &node)
+  bool generate_params(ASTNodeBase &node, bool &return_is_defined)
   {
     switch (node.type)
     {
       case ASTNodeType::returnstatement:
       {
         auto has_return_type = node.children().size() > 0;
-        if (has_return_type)
+        if (has_return_type && !return_is_defined)
         {
+          return_is_defined = true;
           generate_code("(result {type})", {asm_type_of(*node.children()[0])}, endline);
         }
       }
@@ -397,6 +398,7 @@ struct CodeGenerator// lambda soup; bring crackers.
         {
           generate_expression_code(node->children()[0].get());
         }
+        generate_code("return", {}, endline);
         return false;// don't descend into children.
       };
       break;
@@ -409,7 +411,8 @@ struct CodeGenerator// lambda soup; bring crackers.
         open_scope();
         generate_code("func ${id}", {id}, endline);
 
-        pre_order_apply(*node, [&](ASTNodeBase &n) { generate_params(n); });
+        bool return_is_defined = false;
+        pre_order_apply(*node, [&](ASTNodeBase &n) { generate_params(n, return_is_defined); });
         pre_order_apply(*node, [&](ASTNodeBase &n) { generate_locals(n); });
       }
       break;
@@ -425,7 +428,8 @@ struct CodeGenerator// lambda soup; bring crackers.
         open_scope();
         generate_code("func $main", {}, endline);
 
-        pre_order_apply(*node, [&](ASTNodeBase &n) { generate_params(n); });
+        bool return_is_defined = false;
+        pre_order_apply(*node, [&](ASTNodeBase &n) { generate_params(n, return_is_defined); });
         pre_order_apply(*node, [&](ASTNodeBase &n) { generate_locals(n); });
       }
       break;
@@ -459,8 +463,6 @@ struct CodeGenerator// lambda soup; bring crackers.
           note("Unhandled case '" + node->name + "' in '" +
                __FUNCTION__ + "':" + std::to_string(__LINE__));
         }
-
-
         return false;// don't descend into children.
       }
       case ASTNodeType::ifstatement:
@@ -651,6 +653,27 @@ struct CodeGenerator// lambda soup; bring crackers.
                         function_name + "':" + std::to_string(__LINE__));
                  }
                }
+               case ASTNodeType::infixoperator:
+               {
+                 if (expression.name == "=")
+                 {
+                   auto lhs = expression.children()[0].get();
+                   auto rhs = expression.children()[1].get();
+                   generate_expression_code(rhs);
+                   generate_code("{op} {lhs}",
+                                 {is_global_id(*lhs) ? "global.set" : "local.set",
+                                  lhs->get_attribute<SymbolTableEntry *>("symbol")
+                                          ->data.at("asm_identifier")},
+                                 endline);
+                   // assignment on the right must return the assigned value for chaining...
+                   generate_code("{op} {lhs}",
+                                 {is_global_id(*lhs) ? "global.get" : "local.get",
+                                  lhs->get_attribute<SymbolTableEntry *>("symbol")
+                                          ->data.at("asm_identifier")},
+                                 endline);
+                   return false;// don't descend into children
+                 }
+               }
                break;
                default:
                  // do no harm.
@@ -696,6 +719,10 @@ struct CodeGenerator// lambda soup; bring crackers.
                     generate_code("{type}.{op}", {type_of_result, asm_math_operations[expression.name]}, endline);
 
                     // result is now on the stack.,
+                  }
+                  else if (expression.name == "=")
+                  {
+                    // do no harm.
                   }
                   else if (asm_conditional_operations.count(expression.name))// maths
                   {
