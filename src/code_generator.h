@@ -204,6 +204,11 @@ struct CodeGenerator// lambda soup; bring crackers.
         close_scope();
         generate_comment(node.get_attribute<std::string>("name").c_str());
       }
+      default:
+      {
+        note("Unhandled case '" + node.name + "' in '" +
+             __FUNCTION__ + "':" + std::to_string(__LINE__));
+      }
     }
     return true;
   }
@@ -221,6 +226,11 @@ struct CodeGenerator// lambda soup; bring crackers.
         generate_code("local {$C0} {i32}", {id, asm_type_of(node)});
         close_scope();
         generate_comment(node.get_attribute<std::string>("name").c_str());
+      }
+      default:
+      {
+        note("Unhandled case '" + node.name + "' in '" +
+             __FUNCTION__ + "':" + std::to_string(__LINE__));
       }
     }
     return true;
@@ -349,20 +359,25 @@ struct CodeGenerator// lambda soup; bring crackers.
       switch (global->type)
       {
         case ASTNodeType::variabledeclaration:
+        {
           auto id = asm_identifier();
-          {
-            global->get_attribute<SymbolTableEntry *>("symbol")
-                    ->data["asm_identifier"] = id;
-            global->get_attribute<SymbolTableEntry *>("symbol")
-                    ->data["global"] = "true";
+          global->get_attribute<SymbolTableEntry *>("symbol")
+                  ->data["asm_identifier"] = id;
+          global->get_attribute<SymbolTableEntry *>("symbol")
+                  ->data["global"] = "true";
 
-            generate_code("(global {id} (mut {type}) ({type}.const 0))",
-                          {id,
-                           asm_types.at(global->get_attribute<std::string>("type")),
-                           asm_types.at(global->get_attribute<std::string>("type"))},
-                          endline);
-          }
+          generate_code("(global {id} (mut {type}) ({type}.const 0))",
+                        {id,
+                         asm_types.at(global->get_attribute<std::string>("type")),
+                         asm_types.at(global->get_attribute<std::string>("type"))},
+                        endline);
           break;
+        }
+        default:
+        {
+          note("Unhandled case '" + node.name + "' in '" +
+               __FUNCTION__ + "':" + std::to_string(__LINE__));
+        }
       }
   }
 
@@ -561,7 +576,7 @@ struct CodeGenerator// lambda soup; bring crackers.
       case ASTNodeType::functiondeclaration:
         // insert a default return for all functions just in case somebody
         // calls halt in the middle of the damn function mmmkay.
-        if (node->get_attribute<SymbolTableEntry *>("symbol")->function->return_type == "int")
+        if (node->get_attribute<SymbolTableEntry *>("symbol")->function->return_type == "int" || node->get_attribute<SymbolTableEntry *>("symbol")->function->return_type == "boolean")
         {
           generate_code("i32.const 0", {}, endline);
           generate_code("return", {}, endline);
@@ -572,6 +587,7 @@ struct CodeGenerator// lambda soup; bring crackers.
       case ASTNodeType::block:
       {
         close_scope();
+        newline();
       }
       case ASTNodeType::formalparameter:
         break;
@@ -584,6 +600,11 @@ struct CodeGenerator// lambda soup; bring crackers.
         break;
       case ASTNodeType::ifstatement:
         break;
+      default:
+      {
+        note("Unhandled case '" + node->name + "' in '" +
+             __FUNCTION__ + "':" + std::to_string(__LINE__));
+      }
     }
   }
 
@@ -621,6 +642,8 @@ struct CodeGenerator// lambda soup; bring crackers.
       auto [_, string_not_previously_defined] = string_table.emplace(
               string_literal,
               StringTableEntry{current_data_offset, (int) string_literal.size()});
+
+      (void) _;// unused variable
 
       if (string_not_previously_defined)
       {

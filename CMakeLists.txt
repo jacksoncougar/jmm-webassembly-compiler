@@ -79,3 +79,26 @@ target_compile_options(parser PRIVATE -Wall -Wpedantic)
 if (${CMAKE_VERSION} VERSION_GREATER "3.11")
     target_link_options(parser PRIVATE -Wall -Wpedantic)
 endif ()
+
+file(GLOB_RECURSE TEST_FILES tests/ms4/*.txt tests/ms4/*.t[0-9][0-9] tests/ms4/*.t[0-9] tests/ms4/*.jmm)
+set(VAR 0)
+add_custom_target(ALLTEST)
+foreach (test ${TEST_FILES})
+    message(STATUS "Creating target for test-file '${test} ${VAR}'")
+    if (${VAR} GREATER 0)
+        MATH(EXPR PREVIOUS "${VAR}-1")
+    endif ()
+    add_custom_target(test-${VAR}
+            COMMAND echo "Running test '${test}'"
+            COMMAND echo "\n"
+            COMMAND parser ${test}
+            COMMAND ${CMAKE_CURRENT_LIST_DIR}/uat.sh ${CMAKE_CURRENT_BINARY_DIR}/result.wat
+            echo console.txt
+            )
+    if (${VAR} GREATER 0)
+        message(STATUS "Creating dep.")
+        add_dependencies(test-${VAR} test-${PREVIOUS})
+    endif ()
+    add_dependencies(ALLTEST test-${VAR})
+    MATH(EXPR VAR "${VAR}+1")
+endforeach (test ${TEST_FILES})
