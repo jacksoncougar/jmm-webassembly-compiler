@@ -1,0 +1,10 @@
+// test that return values from functions works (int)
+main() {
+    int retval;
+    retval = generator();
+    printi(retval);
+}
+
+int generator() {
+    return 42;
+}

@@ -1,0 +1,6 @@
+// test that printi works on small numbers.
+main() {
+    int sum;
+    sum = 2 + 3;
+    printi(sum);
+}

@@ -1,0 +1,18 @@
+// test that printi works on small numbers.
+main() {
+    printc(10);
+    printi(-1);
+    printc(10);
+    printi(0);
+    printc(10);
+    printi(1);
+    printc(10);
+    printi(-2147483648);
+    printc(10);
+    printi(2147483647);
+    printc(10);
+    printi(1);
+    printc(10);
+    printi(8008135);
+    printc(10);
+}

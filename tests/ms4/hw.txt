@@ -1,3 +1,4 @@
+// classic 'hello world' test case. (test that prints works).
 main() {
     prints("hello world");
 }

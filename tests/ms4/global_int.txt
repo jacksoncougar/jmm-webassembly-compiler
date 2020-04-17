@@ -1,0 +1,6 @@
+// test that global variables generate appropriate code
+int i;
+main() {
+    i = -103;
+    printi(i);
+}

@@ -43,7 +43,7 @@ Identifier              [_[:alpha:]][_[:alnum:]]*
   * numbers which I will not issue a warning or error for in the scanner.
   */
 
-DecimalNumeral          (0|{NonZeroDigit}{Digits}?|{NonZeroDigit}{Underscores}{Digits})
+DecimalNumeral          -?(0|{NonZeroDigit}{Digits}?|{NonZeroDigit}{Underscores}{Digits})
 Digits                  ({Digit}|{Digit}{DigitsAndUnderscores}?{Digit})
 Digit                   [0-9]
 NonZeroDigit            [1-9]

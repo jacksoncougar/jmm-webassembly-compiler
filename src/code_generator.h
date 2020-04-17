@@ -16,7 +16,7 @@
 
 using namespace std::literals::string_literals;
 
-struct CodeGenerator
+struct CodeGenerator// lambda soup; bring crackers.
 {
   struct Wrapper
   {
@@ -39,11 +39,76 @@ struct CodeGenerator
   };
 
   Wrapper destination;
+
   int current_indentation_level = 0;
   bool is_newline = true;
   bool runtime_library = false;
   int current_column_position = 0;
   int current_data_offset = 0;
+
+  std::map<std::string, std::string> asm_types = {
+          {"int", "i32"},
+          {"boolean", "i32"}};
+
+  std::map<std::string, std::string> asm_math_operations = {
+          {"+", "add"},
+          {"-", "sub"},
+          {"*", "mul"},
+          {"/", "div_s"},
+          {"%", "rem_s"}};
+
+  std::map<std::string, std::string> asm_conditional_operations = {
+          {"&&", "and"},
+          {"||", "or"},
+          {"<", "lt_s"},
+          {"<=", "le_s"},
+          {">", "gt_s"},
+          {">=", "ge_s"},
+          {"==", "eq"},
+          {"!=", "ne"},
+  };
+
+  struct StringTableEntry
+  {
+    int offset;
+    int length;
+  };
+  std::map<std::string, StringTableEntry> string_table;
+
+  std::string asm_identifier()
+  {
+    static int identifier = 0;
+    return "$" + std::to_string(identifier++);
+  }
+
+  std::string asm_label()
+  {
+    static int label = 0;
+    return "$L" + std::to_string(label++);
+  }
+
+  std::string asm_type_of(ASTNodeBase &node)
+  {
+    return asm_types.at(node.get_attribute<std::string>("type"));
+  }
+
+  std::string get_identifier_of(ASTNodeBase &node)
+  {
+    return node.get_attribute<SymbolTableEntry *>("symbol")
+            ->data["asm_identifier"];
+  }
+
+  bool is_global_id(ASTNodeBase &node)
+  {
+    return node.get_attribute<SymbolTableEntry *>("symbol")
+                   ->data.count("global") > 0;
+  }
+
+  std::string trim(std::string string)
+  {
+    // remove quotations marks.
+    return string.substr(1, string.size() - 2);
+  }
 
   struct Indent
   {
@@ -61,18 +126,18 @@ struct CodeGenerator
     }
   };// stream manipulation
 
-  void open_scope()
-  {
-    destination << Indent(*this) << "(";
-    current_indentation_level++;
-  }
-
   enum FormatOptions
   {
     none = 0,
     endline = 1,
     align
   };
+
+  void open_scope()
+  {
+    destination << Indent(*this) << "(";
+    current_indentation_level++;
+  }
 
   void close_scope(FormatOptions options = none)
   {
@@ -81,9 +146,14 @@ struct CodeGenerator
     if (options & endline) newline();
   }
 
+  void newline()
+  {
+    destination << '\n';
+    is_newline = true;
+  }
+
   public:
   CodeGenerator(std::ostream &destination) : destination(destination, *this) {}
-
 
   void generate_comment(std::string_view format,
                         std::initializer_list<std::string_view> args = {},
@@ -102,58 +172,19 @@ struct CodeGenerator
     if (options & endline) newline();
   }
 
-  /**
-   * Cleans up any lingering indentation.
-   * @param node
-   */
-  void post_process(ASTNodeBase *node)
-  {
-    switch (node->type)
-    {
-      case ASTNodeType::start:
-        close_scope();
-
-        break;
-      case ASTNodeType::functiondeclaration:
-        close_scope();
-        newline();
-        break;
-      case ASTNodeType::formalparameter:
-        break;
-      case ASTNodeType::variabledeclaration:
-        break;
-      case ASTNodeType::mainfunctiondeclaration:
-        close_scope();
-        newline();
-
-        break;
-      case ASTNodeType::ifstatement:
-        break;
-    }
-  }
-
-  void newline()
-  {
-    destination << '\n';
-    is_newline = true;
-  }
-
-  std::string asm_identifier()
-  {
-    static int identifier = 0;
-    return "$" + std::to_string(identifier++);
-  }
-
-  std::string asm_label()
-  {
-    static int label = 0;
-    return "$L" + std::to_string(label++);
-  }
-
   bool generate_locals(ASTNodeBase &node)
   {
     switch (node.type)
     {
+      case ASTNodeType::returnstatement:
+      {
+        auto has_return_type = node.children().size() > 0;
+        if (has_return_type)
+        {
+          generate_code("(result {type})", {asm_type_of(*node.children()[0])}, endline);
+        }
+      }
+      break;
       case ASTNodeType::formalparameter:
       {
         open_scope();
@@ -182,61 +213,98 @@ struct CodeGenerator
   void generate_runtime_system()
   {
     if (runtime_library) return;
-    static auto prints_asm_source = R"(
-(func $prints (; 1 ;) (param $0 i32) (param $1 i32)
-  (block $label$0
-   (br_if $label$0
-    (i32.lt_s
-     (get_local $1)
-     (i32.const 1)
-    )
-   )
-   (loop $label$1
-     (call $putchar
-      (i32.load8_s
-       (get_local $0)
-      )
-    )
-    (set_local $0
-     (i32.add
-      (get_local $0)
-      (i32.const 1)
-     )
-    )
-    (br_if $label$1
-     (tee_local $1
-      (i32.add
+    constexpr auto prints_asm_source = R"(
+  ;;
+  (func $prints (; 1 ;) (param $0 i32) (param $1 i32)
+    (block $label$0
+     (br_if $label$0
+      (i32.lt_s
        (get_local $1)
-       (i32.const -1)
+       (i32.const 1)
+      )
+     )
+     (loop $label$1
+       (call $putchar
+        (i32.load8_s
+         (get_local $0)
+        )
+      )
+      (set_local $0
+       (i32.add
+        (get_local $0)
+        (i32.const 1)
+       )
+      )
+      (br_if $label$1
+       (tee_local $1
+        (i32.add
+         (get_local $1)
+         (i32.const -1)
+        )
+       )
       )
      )
     )
-   )
-  )
- ))";
-
-    static auto printi_source = R"(void printi(int i) {
+  ))";
+    constexpr auto printi_source = R"(void printi(int i) {
+  int digit;
+  int divisor;
   int remainder;
-  int quotient;
+  int lz;
+  boolean negative;
 
-  remainder = 0;
-  quotient = i;
+  negative = false;
 
-  while(quotient > 0) {
-      remainder = quotient % 10;
-      quotient = quotient / 10;
-      putchar(48 + remainder);
+
+  lz = 0;
+  divisor = 1000000000;
+  remainder = i;
+  digit = 0;
+
+  if(remainder < 0) {
+      putchar(45); // '-'
+      negative = true;
   }
-})";
 
-    static auto printb_source = R"(void printb(int b) {
+  // eat up leading zeros
+
+  while(lz == 0 && divisor > 0) {
+    lz = remainder / divisor;
+
+    remainder = remainder % divisor;
+    divisor = divisor / 10;
+  }
+
+  digit = lz;
+  while(divisor > 0) {
+    if(negative){
+      putchar(48 + (0 - digit));
+    }
+    else {
+      putchar(48 + digit);
+    }
+    digit = remainder / divisor;
+
+    remainder = remainder % divisor;
+    divisor = divisor / 10;
+  }    if(negative){
+      putchar(48 + (0 - digit));
+    }
+    else {
+      putchar(48 + digit);
+    }
+})";
+    constexpr auto printc_source = R"(void printc(int c) {
+  putchar(c);
+})";
+    constexpr auto printb_source = R"(void printb(int b) {
   if(b) prints("true");
   else prints("false");
 })";
 
     generate_code(prints_asm_source, {}, endline);
 
-    runtime_library = true;
+    runtime_library = true;// switch into runtime generation mode...
     auto compile = [&](std::string jmm_source_code) -> std::string {
       yy::Driver driver;
       driver.streamname = "runtime_library";
@@ -253,10 +321,33 @@ struct CodeGenerator
 
       return out.str();
     };
-
     generate_code(compile(printi_source), {}, endline);
     generate_code(compile(printb_source), {}, endline);
-    runtime_library = false;
+    generate_code(compile(printc_source), {}, endline);
+    runtime_library = false;// switch back to normal mode...
+  }
+
+  void generate_globals(ASTNodeBase &node)
+  {
+    for (auto &&global : node.children())
+      switch (global->type)
+      {
+        case ASTNodeType::variabledeclaration:
+          auto id = asm_identifier();
+          {
+            global->get_attribute<SymbolTableEntry *>("symbol")
+                    ->data["asm_identifier"] = id;
+            global->get_attribute<SymbolTableEntry *>("symbol")
+                    ->data["global"] = "true";
+
+            generate_code("(global {id} (mut {type}) ({type}.const 0))",
+                          {id,
+                           asm_types.at(global->get_attribute<std::string>("type")),
+                           asm_types.at(global->get_attribute<std::string>("type"))},
+                          endline);
+          }
+          break;
+      }
   }
 
   bool generate_code(ASTNodeBase *node)
@@ -268,11 +359,30 @@ struct CodeGenerator
         open_scope();
         generate_code("module", {}, endline);
 
+        generate_comment("externs/imports", {}, endline);
         generate_externs();
-        generate_code("(memory 0)", {}, endline);
-        generate_runtime_system();
+        generate_comment("data", {}, endline);
         generate_strings(*node);
+        generate_globals(*node->children()[0]);
+        generate_comment("program", {}, endline);
+        generate_webasm_code(node->children()[0].get());
+        generate_comment("runtime system", {}, endline);
+        generate_runtime_system();
+        generate_code("(memory 1)", {}, endline);
+
+
+        return false;// don't descend into children.
       }
+      break;
+
+      case ASTNodeType::returnstatement:
+      {
+        auto has_return_type = node->children().size() > 0;
+        if (has_return_type)
+        {
+          generate_expression_code(node->children()[0].get());
+        }
+      };
       break;
 
       case ASTNodeType::functiondeclaration:
@@ -302,9 +412,7 @@ struct CodeGenerator
       }
       break;
       case ASTNodeType::functioninvocation:
-        generate_expression_code(node->children()[1].get());
-        generate_code("call ${function}",
-                      {node->get_attribute<SymbolTableEntry *>("symbol")->identifier}, endline);
+        generate_function_call(*node);
         return false;// don't descend into children;
       case ASTNodeType::infixoperator:
       {
@@ -314,8 +422,9 @@ struct CodeGenerator
         generate_expression_code(rhs);
 
         // assign that result to the lhs identifier...
-        generate_code("local.set {lhs}",
-                      {lhs->get_attribute<SymbolTableEntry *>("symbol")
+        generate_code("{op} {lhs}",
+                      {is_global_id(*lhs) ? "global.set" : "local.set",
+                       lhs->get_attribute<SymbolTableEntry *>("symbol")
                                ->data.at("asm_identifier")},
                       endline);
 
@@ -366,6 +475,7 @@ struct CodeGenerator
         generate_comment("loop condition", {}, endline);
         generate_expression_code(node->children()[0].get());
         generate_comment("loop test", {}, endline);
+        generate_code("i32.eqz", {}, endline);
         generate_code("br_if {label}", {exit_label}, endline);
         generate_comment("loop body", {}, endline);
         generate_webasm_code(node->children()[1].get());
@@ -383,50 +493,34 @@ struct CodeGenerator
     return true;// descend into children.
   }
 
-  std::map<std::string, std::string> asm_type_name = {
-          {"int", "i32"},
-          {"boolean", "i32"}};
-
-  std::map<std::string, std::string> asm_math_operations = {
-          {"+", "add"},
-          {"-", "sub"},
-          {"*", "mul"},
-          {"/", "div_u"},
-          {"%", "rem_u"}};
-
-  std::map<std::string, std::string> asm_conditional_operations = {
-          {"&&", "and"},
-          {"||", "or"},
-          {"<", "lt_u"},
-          {"<=", "le_u"},
-          {">", "gt_u"},
-          {">=", "ge_u"},
-          {"==", "eq"},
-          {"!=", "ne"},
-  };
-
-  std::string asm_type_of(ASTNodeBase &node)
+  /**
+   * Cleans up any lingering indentation.
+   * @param node
+   */
+  void post_process(ASTNodeBase *node)
   {
-    return asm_type_name.at(node.get_attribute<std::string>("type"));
-  }
+    switch (node->type)
+    {
+      case ASTNodeType::start:
+        close_scope();
 
-  std::string get_identifier_of(ASTNodeBase &node)
-  {
-    return node.get_attribute<SymbolTableEntry *>("symbol")
-            ->data["asm_identifier"];
-  }
+        break;
+      case ASTNodeType::functiondeclaration:
+        close_scope();
+        newline();
+        break;
+      case ASTNodeType::formalparameter:
+        break;
+      case ASTNodeType::variabledeclaration:
+        break;
+      case ASTNodeType::mainfunctiondeclaration:
+        close_scope();
+        newline();
 
-  struct StringTableEntry
-  {
-    int offset;
-    int length;
-  };
-  std::map<std::string, StringTableEntry> string_table;
-
-  std::string trim(std::string string)
-  {
-    // remove quotations marks.
-    return string.substr(1, string.size() - 2);
+        break;
+      case ASTNodeType::ifstatement:
+        break;
+    }
   }
 
   void generate_prints()
@@ -484,80 +578,109 @@ struct CodeGenerator
     });
   }
 
+  void generate_function_call(ASTNodeBase &functioninvocation)
+  {
+    auto has_arguments = functioninvocation.get_attribute<SymbolTableEntry *>("symbol")->function->number_of_args > 0;
+    if (has_arguments)
+    {
+      generate_expression_code(functioninvocation.children()[1].get());
+    }
+    generate_code("call ${function}",
+                  {functioninvocation.get_attribute<SymbolTableEntry *>("symbol")->identifier}, endline);
+  }
+
   void generate_expression_code(ASTNodeBase *expression)
   {
     // walk the expression tree from the bottom up building up asm
     // instructions
     pre_post_order_apply(
             *expression, [&, function_name = std::string(__FUNCTION__)](ASTNodeBase &expression) {
-              if (expression.name == "!")// integer constant
-              {
-                // take the current value on the stack and invert it
-                generate_code("{op} {value}", {"i32.const", "0"});
-                generate_comment("begin negation", {}, endline);
-              }
+             switch (expression.type)
+             {
+               case ASTNodeType::functioninvocation:
+                  generate_function_call(expression);
+                  return false; // don't descend into children.
+                 break;
+               default:
+                 if (expression.name == "!")// integer constant
+                 {
+                   // take the current value on the stack and invert it
+                   generate_code("{op} {value}", {"i32.const", "0"});
+                   generate_comment("begin negation", {}, endline);
+                 }
+             }
               return true; },
             [&, function_name = std::string(__FUNCTION__)](
                     ASTNodeBase &expression) {
-              if (expression.name == "int")// integer constant
+              switch (expression.type)
               {
-                generate_code("{op} {value}",
-                              {"i32.const ", expression.get_attribute<std::string>("value")}, endline);
-              }
-              else if (expression.name == "true" || expression.name == "false")// integer constant
-              {
-                auto value = expression.get_attribute<std::string>("value") == "true"
-                                     ? "1"
-                                     : "0";
-                generate_code("{op} {value}",
-                              {"i32.const", value});
-                generate_comment("boolean " + expression.name, {}, endline);
-              }
-              else if (expression.name == "int")// integer constant
-              {
-                generate_code("{op} {value}",
-                              {"i32.const", expression.get_attribute<std::string>("value")}, endline);
-              }
-              else if (expression.name == "string")// integer constant
-              {
-                auto [offset, length] = string_table.at(trim(expression.get_attribute<std::string>("value")));
-                generate_code("{op} {value}",
-                              {"i32.const", std::to_string(offset)}, endline);
-                generate_code("{op} {value}",
-                              {"i32.const", std::to_string(length)}, endline);
-              }
-              else if (expression.name == "id")// integer constant
-              {
-                generate_code("{op} {value}",
-                              {"local.get", get_identifier_of(expression)}, endline);
-              }
-              else if (expression.name == "!")// integer constant
-              {
-                // take the current value on the stack and invert it
-                generate_code("{op}", {"i32.sub"});
-                generate_comment("end negation");
-              }
-              else if (asm_math_operations.count(expression.name))// maths
-              {
-                auto type_of_result =
-                        asm_type_name.at(expression.get_attribute<std::string>("type"));
-                generate_code("{type}.{op}", {type_of_result, asm_math_operations[expression.name]}, endline);
+                case ASTNodeType::functioninvocation:
+                default:
+                {
+                  if (expression.name == "int")// integer constant
+                  {
+                    generate_code("{op} {value}",
+                                  {"i32.const ", expression.get_attribute<std::string>("value")}, endline);
+                  }
+                  else if (expression.name == "true" || expression.name == "false")// integer constant
+                  {
+                    auto value = expression.get_attribute<std::string>("value") == "true"
+                                         ? "1"
+                                         : "0";
+                    generate_code("{op} {value}",
+                                  {"i32.const", value});
+                    generate_comment("boolean " + expression.name, {}, endline);
+                  }
+                  else if (expression.name == "int")// integer constant
+                  {
+                    generate_code("{op} {value}",
+                                  {"i32.const", expression.get_attribute<std::string>("value")}, endline);
+                  }
+                  else if (expression.name == "string")// integer constant
+                  {
+                    auto [offset, length] = string_table.at(trim(expression.get_attribute<std::string>("value")));
+                    generate_code("{op} {value}",
+                                  {"i32.const", std::to_string(offset)}, endline);
+                    generate_code("{op} {value}",
+                                  {"i32.const", std::to_string(length)}, endline);
+                  }
+                  else if (expression.name == "id")// integer constant
+                  {
 
-                // result is now on the stack.,
-              }
-              else if (asm_conditional_operations.count(expression.name))// maths
-              {
-                auto type_of_result =
-                        asm_type_name.at(expression.get_attribute<std::string>("type"));
-                generate_code("{type}.{op}", {type_of_result, asm_conditional_operations[expression.name]}, endline);
+                    generate_code("{op} {value}",
+                                  {is_global_id(expression) ? "global.get" : "local.get",
+                                   get_identifier_of(expression)},
+                                  endline);
+                  }
+                  else if (expression.name == "!")// integer constant
+                  {
+                    // take the current value on the stack and invert it
+                    generate_code("{op}", {"i32.sub"});
+                    generate_comment("end negation");
+                  }
+                  else if (asm_math_operations.count(expression.name))// maths
+                  {
+                    auto type_of_result =
+                            asm_types.at(expression.get_attribute<std::string>("type"));
+                    generate_code("{type}.{op}", {type_of_result, asm_math_operations[expression.name]}, endline);
 
-                // result is now on the stack.,
-              }
-              else
-              {
-                // do some sanity checking while debugging...
-                error("Unhandled case '" + expression.name + "' in '" +
-                      function_name + "'");
+                    // result is now on the stack.,
+                  }
+                  else if (asm_conditional_operations.count(expression.name))// maths
+                  {
+                    auto type_of_result =
+                            asm_types.at(expression.get_attribute<std::string>("type"));
+                    generate_code("{type}.{op}", {type_of_result, asm_conditional_operations[expression.name]}, endline);
+
+                    // result is now on the stack.,
+                  }
+                  else
+                  {
+                    // do some sanity checking while debugging...
+                    error("Unhandled case '" + expression.name + "' in '" +
+                          function_name + "'");
+                  }
+                }
               }
             });
   }
