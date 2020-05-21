@@ -1,5 +1,5 @@
-# CPSC 411 Compiler Construction
-Jackson Cougar Wiebe 30062138
+# Compiler Construction (CPSC 411) Project
+Jackson Cougar Wiebe &bull; University of Calgary &bull; Winter 2020
 
 ## Building
 
