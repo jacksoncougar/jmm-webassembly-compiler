@@ -56,7 +56,7 @@ ADD_FLEX_BISON_DEPENDENCY(Lex Parser)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src)
 
-add_executable(parser
+add_executable(jcc
         src/main.cpp
         src/driver.cpp
         src/declarations.hpp
@@ -67,7 +67,7 @@ add_executable(parser
         ${BISON_Parser_OUTPUTS}
         src/semantic_checker.cpp src/semantic_checker.h src/code_generator.cpp src/code_generator.h src/runtime_library.cpp src/runtime_library.h)
 
-target_include_directories(parser
+target_include_directories(jcc
         PUBLIC ${FLEX_INCLUDE_DIRS})
 
 if(MSVC)
