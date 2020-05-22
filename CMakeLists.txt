@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(Scanner LANGUAGES CXX)
 
-find_package(FLEX REQUIRED)
+find_package(FLEX 2.5 REQUIRED)
 find_package(BISON REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -54,13 +54,9 @@ flex_target(
 
 ADD_FLEX_BISON_DEPENDENCY(Lex Parser)
 
-message(STATUS
-        ${FLEX_INCLUDE_DIRS})
-
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src)
 
 add_executable(parser
-        ${FLEX_INCLUDE_DIRS}
         src/main.cpp
         src/driver.cpp
         src/declarations.hpp
@@ -74,7 +70,8 @@ add_executable(parser
 target_include_directories(parser
         PUBLIC ${FLEX_INCLUDE_DIRS})
 
-target_compile_options(parser PRIVATE -Wall -Wpedantic)
-if (${CMAKE_VERSION} VERSION_GREATER "3.11")
-    target_link_options(parser PRIVATE -Wall -Wpedantic)
-endif ()
+if(MSVC)
+else()
+target_compile_options(parser PRIVATE  -Wall -Wpedantic)
+target_link_options(parser PRIVATE  -Wall -Wpedantic)
+endif()
