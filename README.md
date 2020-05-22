@@ -3,7 +3,7 @@ Jackson Cougar Wiebe &bull; University of Calgary &bull; Winter 2020
 
 ## Overview
 
-Compiler written in c++ for compiling the fictional language `J--` into `WebAssembly`.
+Compiler written in c++ for compiling the fictional language `J--` into `WebAssembly`. Only the text encoding of web assembly is supported (\*.wat).
 
 ### J--
 
