@@ -42,6 +42,34 @@ Strong Type Checking
     }
 ```
 
+#### Example WebAssembly output
+
+```perl
+;;begins auto generated .wasm code
+(module
+  ;;externs/imports
+  (import "host" "exit" (func $halt))
+  (import "host" "getchar" (func $getchar (result i32)))
+  (import "host" "putchar" (func $putchar (param i32)))
+  ;;data
+...
+  (data 0 (i32.const 9) "Hello, world!")
+  ;;program
+  ;;begins auto generated .wasm code
+  (start $main)
+  (func $main
+    i32.const 9
+    i32.const 13
+    call $prints
+  )
+  ;;finished auto generated .wasm code
+  ;;runtime system
+ ...
+  (memory 1)
+);;finished auto generated .wasm code
+
+```
+
 ## Dependancies
 
 - flex (>2.5)
@@ -50,3 +78,5 @@ Strong Type Checking
 ## Usage
 
     jcc [INPUT_JMM_FILE]
+
+The resulting WAT file will be saved to the current working directory.
